@@ -1,0 +1,989 @@
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="3.8.7">Jekyll</generator><link href="http://localhost:4000/feed.xml" rel="self" type="application/atom+xml" /><link href="http://localhost:4000/" rel="alternate" type="text/html" /><updated>2020-09-12T09:01:11-05:00</updated><id>http://localhost:4000/feed.xml</id><title type="html">lukas zamora</title><subtitle>aspriring data analyst -- music lover.
+</subtitle><author><name>lukas zamora</name></author><entry><title type="html">Austin Crime Reports</title><link href="http://localhost:4000/austin-crime-reports.html" rel="alternate" type="text/html" title="Austin Crime Reports" /><published>2020-08-20T00:00:00-05:00</published><updated>2020-08-20T00:00:00-05:00</updated><id>http://localhost:4000/austin-crime-reports</id><content type="html" xml:base="http://localhost:4000/austin-crime-reports.html">&lt;h1 id=&quot;austin-crime-reports&quot;&gt;Austin-Crime-Reports&lt;/h1&gt;
+
+&lt;p&gt;Exploratory data analysis of Austin Police Department’s crime reports.&lt;/p&gt;
+
+&lt;p&gt;The data was gathered from APD’s &lt;a href=&quot;https://data.austintexas.gov/Public-Safety/Crime-Reports/fdj4-gpfu&quot;&gt;Crime Reports&lt;/a&gt; database. It ranges in crimes committed from 2003 to August 2020.&lt;/p&gt;
+
+&lt;h2 id=&quot;1---introductionproblem-definition&quot;&gt;1 - Introduction/Problem Definition&lt;/h2&gt;
+
+&lt;p&gt;To have a perspective of the state of security of Austin I defined few questions, which I answered during this data analytic project. Here is the list of these questions:&lt;/p&gt;
+&lt;ol&gt;
+  &lt;li&gt;How has the number of various crimes changed over time in Austin?&lt;/li&gt;
+  &lt;li&gt;How have the number arrests corresponded to the crimes changed over time in Austin?&lt;/li&gt;
+  &lt;li&gt;Which crimes are most frequently committed?&lt;/li&gt;
+  &lt;li&gt;Which locations are these frequent crimes being committed to?&lt;/li&gt;
+  &lt;li&gt;Are there certain high crime locations for certain crimes?&lt;/li&gt;
+  &lt;li&gt;How has the number of certain crimes changed over the years in Austin?&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;To answer these question I took the four main steps of the KDD data mining pipeline, which are respectively, data preprocessing, data pre-processing, analysis and post-processing. In this documentation, I also use the same name for each section of the report. In Section 2, I describe how I gathered our data and the tasks I did in regard to clean the data as the data Pre-Processing phase. Section 3 I dive straight into the data analysis process, firstly, introducing the methods and technologies I used and then provide details on how I dealt with crime data in Spark SQL. Section 4 dives into the visualization of my results. Finally, in Section 5 I bring the conclusion.&lt;/p&gt;
+
+&lt;p&gt;&lt;img style=&quot;float: center;&quot; src=&quot;/assets/images/kdd.JPG&quot; width=&quot;500&quot; height=&quot;250&quot; /&gt;&lt;/p&gt;
+
+&lt;h2 id=&quot;2---data-pre-processing-data-extraction&quot;&gt;2 - Data Pre-Processing: Data Extraction&lt;/h2&gt;
+
+&lt;h3 id=&quot;21---data-exploration&quot;&gt;2.1 - Data Exploration&lt;/h3&gt;
+
+&lt;p&gt;The dataset was gathered from &lt;a href=&quot;https://data.austintexas.gov/&quot;&gt;data.austin.gov&lt;/a&gt;. According to the information provided along with this dataset,&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;This dataset contains a record of incidents that the Austin Police Department responded to and wrote a report. Please note one incident may have several offenses associated with it, but this dataset only depicts the highest level offense of that incident. Data is from 2003 to present. This dataset is updated weekly. Understanding the following conditions will allow you to get the most out of the data provided. Due to the methodological differences in data collection, different data sources may produce different results. This database is updated weekly, and a similar or same search done on different dates can produce different results. Comparisons should not be made between numbers generated with this database to any other official police reports. Data provided represents only calls for police service where a report was written. Totals in the database may vary considerably from official totals following investigation and final categorization. Therefore, the data should not be used for comparisons with Uniform Crime Report statistics.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;In general, the data included information such as data/time the crime was committed, the location where the crime occurred, type of crime, location description, whether there was an arrest, and location coordinates.&lt;/p&gt;
+
+&lt;h4 id=&quot;211---size-of-data&quot;&gt;2.1.1 - Size of Data&lt;/h4&gt;
+
+&lt;p&gt;The data had 2,255,966 records and 27 columns. The list of the names of each column from left to right are as follows: Incident Number, Highest Offense Description, Highest Offense Code, Family Violence, Occurred Date Time, Occurred Date, Occurred Time, Report Date Time, Report Date, Report Time, Location Type, Address, Zip Code, Council District, APD Sector, APD District, PRA, Census Tract, Clearance Status, Clearance Date, UCR Category, Category Description, X-coordinate, Y-coordinate, Latitude, Longitude, and Location.&lt;/p&gt;
+
+&lt;!-- ![dataset](/assets/figure1.JPG) --&gt;
+
+&lt;h4 id=&quot;212---sneak-peek-into-the-data&quot;&gt;2.1.2 - Sneak Peek into the Data&lt;/h4&gt;
+
+&lt;p&gt;To have a quick intrusion of the structure of this dataset, here is a screenshot of the first few records.&lt;/p&gt;
+
+&lt;!-- ![peek](/assets/figure2.JPG) --&gt;
+
+&lt;h3 id=&quot;22---data-extraction&quot;&gt;2.2 - Data Extraction&lt;/h3&gt;
+
+&lt;p&gt;There are so many tools for data Preprocessing like Stanford Visualization Groups Data Wrangler, Redshift, or OpenRefine. These tools are fantastic and can save hours. There is overlap in their functionality as well. However, Spark SQL is incredibly easy and convenient; I used this tool to gain an insight into the data. Using Spark we find out that based on our goal in the project, the Austin Crime dataset requires one of the most important data pre-processing procedure which is &lt;em&gt;cleaning&lt;/em&gt;. Our data needs to be cleansed by:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Removing duplicate rows&lt;/li&gt;
+  &lt;li&gt;Removing missing values (NULL/NA values) in the dataset&lt;/li&gt;
+  &lt;li&gt;Fltering out all the features from the dataset that are not relevant to our data analysis (UCR Category, APD Sector, etc.)&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;To apply these preprocessing tasks on our dataset, I used Spark in this sequence:  First, I had a lot of corrupted data in each record that I had to remove. For instance, out of 2,255,966 records in the file, 70,627 records were filtered due to not matching with the column attribute. After that, I had to find the wrong data in each column and remove them. Then I removed the duplicate data, and finally, delete the columns I did not need so the data would be smaller and faster to work with. After making sure the data is clean. Doing such clearing, lowered the size of the data significantly.&lt;/p&gt;
+
+&lt;h2 id=&quot;analysis&quot;&gt;Analysis&lt;/h2&gt;
+
+&lt;p&gt;As explained in a previous section, I used Spark SQL (more specifically, the &lt;code class=&quot;highlighter-rouge&quot;&gt;pyspark&lt;/code&gt; Python library) to query to the data set to answer each of the questions I defined from the project’s goal in Section 1.&lt;/p&gt;
+
+&lt;h4 id=&quot;question-1-how-has-the-number-of-various-crimes-changed-over-time-in-austin&quot;&gt;Question 1: How has the number of various crimes changed over time in Austin?&lt;/h4&gt;
+
+&lt;p&gt;From this question, we can view how each type of crime has been decreasing or increasing over the years. The following Spark SQL code will output this table as a result.&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;df_clean = df.withColumn('year',f.year(f.to_timestamp('occurred_date','MM/dd/yyyy')))
+
+crime_count = df_clean.groupBy(&quot;highest_offense_description&quot;, &quot;year&quot;) \
+              .count().orderBy(&quot;year&quot;,&quot;highest_offense_description&quot;,ascending=True) \
+              .show(20,False)
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;+------------------------------+----+-----+
+|highest_offense_description   |year|count|
++------------------------------+----+-----+
+|ABUSE OF OFFICIAL CAPACITY    |2003|1    |
+|AGG ASLT W/MOTOR VEH FAM/DAT V|2003|9    |
+|AGG ASSAULT                   |2003|327  |
+|AGG ASSAULT FAM/DATE VIOLENCE |2003|258  |
+|AGG ASSAULT ON PUBLIC SERVANT |2003|15   |
+|AGG ASSAULT WITH MOTOR VEH    |2003|47   |
+|AGG FORCED SODOMY             |2003|2    |
+|AGG FORCED SODOMY OF CHILD    |2003|32   |
+|AGG KIDNAPPING                |2003|2    |
+|AGG PERJURY                   |2003|1    |
+|AGG PROMOTION OF PROSTITUTION |2003|7    |
+|AGG RAPE                      |2003|6    |
+|AGG RAPE OF A CHILD           |2003|22   |
+|AGG ROBBERY BY ASSAULT        |2003|19   |
+|AGG ROBBERY/DEADLY WEAPON     |2003|234  |
+|AGG SEXUAL ASSAULT CHILD/OBJEC|2003|37   |
+|AGG SEXUAL ASSAULT W OBJECT   |2003|11   |
+|AMPLIFIED MUSIC / VEHICLE     |2003|4    |
+|APPLIC TO REVOKE PROBATION    |2003|25   |
+|ARSON                         |2003|68   |
++------------------------------+----+-----+
+only showing top 20 rows
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h4 id=&quot;question-2-how-have-the-number-of-arrests-corresponding-to-the-crimes-changed-over-time-in-austin&quot;&gt;Question 2: How have the number of arrests corresponding to the crimes changed over time in Austin?&lt;/h4&gt;
+
+&lt;p&gt;By calculating the total amount of crimes and arrest each year, we can see how many crimes were solved and see how the crime occurred in Austin during 2003-2020. The following SQL lets us get the number of crimes and arrest each year.&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;   crimes           arrests
++----+-----+      +----+-----+
+|year|count|      |year|count|
++----+-----+      +----+-----+
+|2003|62793|      |2003|13097|
+|2004|60785|      |2004|15174|
+|2005|64123|      |2005|14645|
+|2006|64605|      |2006|14385|
+|2007|68777|      |2007|15282|
+|2008|71728|      |2008|17830|
+|2009|70136|      |2009|16800|
+|2010|67573|      |2010|15169|
+|2011|63425|      |2011|14303|
+|2012|62052|      |2012|13921|
+|2013|59334|      |2013|13261|
+|2014|55839|      |2014|12446|
+|2015|52814|      |2015|10925|
+|2016|50760|      |2016|10876|
+|2017|48053|      |2017|10544|
+|2018|45306|      |2018|8798 |
+|2019|53457|      |2019|8738 |
+|2020|27001|      |2020|3722 |
++----+-----+      +----+-----+
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h4 id=&quot;question-3-which-crimes-are-frequently-committed&quot;&gt;Question 3: Which crimes are frequently committed?&lt;/h4&gt;
+
+&lt;p&gt;More specifically in this question, we want to know what the most frequent crime is committed between the years 2003 and 2020, so we need to calculate the number of each crime type during all these years. To find the result we used the following Spark SQL command:&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;top_crimes = df_clean.groupBy('highest_offense_description').count().orderBy(desc(&quot;count&quot;)).show(20, False)
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;+------------------------------+------+
+|highest_offense_description   |count |
++------------------------------+------+
+|BURGLARY OF VEHICLE           |107116|
+|FAMILY DISTURBANCE            |99369 |
+|THEFT                         |82773 |
+|CRIMINAL MISCHIEF             |63418 |
+|BURGLARY OF RESIDENCE         |45327 |
+|ASSAULT W/INJURY-FAM/DATE VIOL|42313 |
+|HARASSMENT                    |34921 |
+|DWI                           |29860 |
+|DISTURBANCE - OTHER           |29319 |
+|PUBLIC INTOXICATION           |26349 |
+|CUSTODY ARREST TRAFFIC WARR   |22042 |
+|RUNAWAY CHILD                 |20152 |
+|AUTO THEFT                    |19291 |
+|ASSAULT WITH INJURY           |19222 |
+|BURGLARY NON RESIDENCE        |17587 |
+|WARRANT ARREST NON TRAFFIC    |17159 |
+|POSSESSION OF MARIJUANA       |15654 |
+|POSS OF DRUG PARAPHERNALIA    |14560 |
+|POSS CONTROLLED SUB/NARCOTIC  |14095 |
+|CRIMINAL TRESPASS             |13725 |
++------------------------------+------+
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h4 id=&quot;question-4-which-locations-are-these-frequent-crimes-being-committed-to&quot;&gt;Question 4: Which locations are these frequent crimes being committed to?&lt;/h4&gt;
+
+&lt;p&gt;From this question, we can see where crimes happen the most in Chicago, and from the result, we found out in Chicago most of the crimes occur on the street. The following Spark SQL statement will show the result.&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;top_locations = df_clean.groupBy(&quot;location_type&quot;).count().orderBy(desc(&quot;count&quot;)).show(20,False);
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;+----------------------------------+------+
+|location_type                     |count |
++----------------------------------+------+
+|RESIDENCE / HOME                  |508667|
+|STREETS / HWY / ROAD / ALLEY      |227327|
+|PARKING LOTS / GARAGE             |104159|
+|COMMERCIAL / OFFICE BUILDING      |61327 |
+|OTHER / UNKNOWN                   |29829 |
+|RESTAURANTS                       |12758 |
+|HOTEL / MOTEL / ETC.              |12615 |
+|BAR / NIGHT CLUB                  |9381  |
+|GOVERNMENT / PUBLIC BUILDING      |9314  |
+|CONVENIENCE STORE                 |9120  |
+|null                              |8776  |
+|DEPARTMENT / DISCOUNT STORE       |8091  |
+|DRUG STORE / DR. OFFICE / HOSPITAL|5088  |
+|SPECIALTY  STORE (TV  FUR ETC.)   |5087  |
+|GAS / SERVICE STATIONS            |4764  |
+|CONSTRUCTION SITE                 |3973  |
+|GROCERY / SUPERMARKET             |3810  |
+|BANKS / SAVINGS &amp;amp; LOAN            |3447  |
+|SCHOOLS / COLLEGES                |3193  |
+|FIELD / WOODS                     |3133  |
++----------------------------------+------+
+only showing top 20 rows
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h4 id=&quot;question-5-are-there-specific-high-crime-locations-for-certain-crimes&quot;&gt;Question 5: Are there specific high crime locations for certain crimes?&lt;/h4&gt;
+
+&lt;p&gt;From the answer to the question, we can view which location has what type of crimes occurred and view what kind of crimes happen the most in a certain location. The Spark SQL showed the amount of each type of crime for each location.&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;crime_location = df_clean.groupBy(&quot;highest_offense_description&quot;, &quot;location_type&quot;).count().sort(&quot;highest_offense_description&quot;, &quot;location_type&quot;).show(20,False)
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;+------------------------------+----------------------------------+-----+
+|highest_offense_description   |location_type                     |count|
++------------------------------+----------------------------------+-----+
+|ABANDONED REFRIGERATOR        |RESIDENCE / HOME                  |3    |
+|ABUSE OF 911                  |DRUG STORE / DR. OFFICE / HOSPITAL|1    |
+|ABUSE OF 911                  |HOTEL / MOTEL / ETC.              |1    |
+|ABUSE OF 911                  |OTHER / UNKNOWN                   |1    |
+|ABUSE OF 911                  |PARKING LOTS / GARAGE             |1    |
+|ABUSE OF 911                  |RESIDENCE / HOME                  |19   |
+|ABUSE OF 911                  |RESTAURANTS                       |1    |
+|ABUSE OF 911                  |STREETS / HWY / ROAD / ALLEY      |3    |
+|ABUSE OF CORPSE               |RESIDENCE / HOME                  |1    |
+|ABUSE OF OFFICIAL CAPACITY    |null                              |4    |
+|ABUSE OF OFFICIAL CAPACITY    |BANKS / SAVINGS &amp;amp; LOAN            |1    |
+|ABUSE OF OFFICIAL CAPACITY    |COMMERCIAL / OFFICE BUILDING      |2    |
+|ABUSE OF OFFICIAL CAPACITY    |GOVERNMENT / PUBLIC BUILDING      |5    |
+|ABUSE OF OFFICIAL CAPACITY    |OTHER / UNKNOWN                   |1    |
+|ABUSE OF OFFICIAL CAPACITY    |RESIDENCE / HOME                  |2    |
+|AGG ASLT ENHANC STRANGL/SUFFOC|null                              |2    |
+|AGG ASLT ENHANC STRANGL/SUFFOC|DRUG STORE / DR. OFFICE / HOSPITAL|1    |
+|AGG ASLT ENHANC STRANGL/SUFFOC|FIELD / WOODS                     |3    |
+|AGG ASLT ENHANC STRANGL/SUFFOC|HOTEL / MOTEL / ETC.              |20   |
+|AGG ASLT ENHANC STRANGL/SUFFOC|OTHER / UNKNOWN                   |2    |
++------------------------------+----------------------------------+-----+
+only showing top 20 rows
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h4 id=&quot;question-6-how-has-the-number-of-certain-crimes-changed-over-the-years-in-austin&quot;&gt;Question 6: How has the number of certain crimes changed over the years in Austin?&lt;/h4&gt;
+
+&lt;p&gt;I wanted to view a specific type of crimes to see if they are increasing or decreasing over the years. I chose Car Burglaries since it is the most occurred crime in Austin, Theft, Possession of Marijuana, and Home Burglaries. The following Spark SQL code will output the amount of each crime per year, respectively.&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;# car burglary
+car_theft = df_clean.where(&quot;highest_offense_description == 'BURGLARY OF VEHICLE'&quot;).groupBy(&quot;year&quot;).count().orderBy(&quot;year&quot;).show();
+
+# theft
+theft = df_clean.where(&quot;highest_offense_description == 'THEFT'&quot;).groupBy(&quot;year&quot;).count().orderBy(&quot;year&quot;).show();
+
+# possession of marijuana
+marijuana = df_clean.where(&quot;highest_offense_description == 'POSSESSION OF MARIJUANA'&quot;).groupBy(&quot;year&quot;).count().orderBy(&quot;year&quot;).show();
+
+# home burglary
+home_theft = df_clean.where(&quot;highest_offense_description == 'BURGLARY OF RESIDENCE'&quot;).groupBy(&quot;year&quot;).count().orderBy(&quot;year&quot;).show();
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;  car theft        theft        poss. of weed   home robbery
++----+-----+    +----+-----+    +----+-----+    +----+-----+
+|year|count|    |year|count|    |year|count|    |year|count|
++----+-----+    +----+-----+    +----+-----+    +----+-----+
+|2003| 7567|    |2003| 4367|    |2003|  634|    |2003| 2731|
+|2004| 7021|    |2004| 4755|    |2004|  544|    |2004| 2715|
+|2005| 7386|    |2005| 4887|    |2005|  531|    |2005| 2781|
+|2006| 6702|    |2006| 5262|    |2006|  577|    |2006| 2971|
+|2007| 7550|    |2007| 5702|    |2007|  612|    |2007| 3263|
+|2008| 6744|    |2008| 5813|    |2008|  684|    |2008| 3215|
+|2009| 7974|    |2009| 5614|    |2009| 1237|    |2009| 3847|
+|2010| 6696|    |2010| 5608|    |2010| 1458|    |2010| 3903|
+|2011| 5943|    |2011| 5011|    |2011| 1310|    |2011| 3048|
+|2012| 6171|    |2012| 5054|    |2012| 1229|    |2012| 3136|
+|2013| 5840|    |2013| 4799|    |2013| 1216|    |2013| 2714|
+|2014| 4973|    |2014| 4419|    |2014| 1148|    |2014| 2419|
+|2015| 4542|    |2015| 4307|    |2015| 1001|    |2015| 1951|
+|2016| 3946|    |2016| 4137|    |2016|  956|    |2016| 1885|
+|2017| 4111|    |2017| 3800|    |2017|  968|    |2017| 1420|
+|2018| 4737|    |2018| 3445|    |2018|  830|    |2018| 1338|
+|2019| 6096|    |2019| 4036|    |2019|  525|    |2019| 1482|
+|2020| 3117|    |2020| 1757|    |2020|  194|    |2020|  508|
++----+-----+    +----+-----+    +----+-----+    +----+-----+
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;data-post-processing--visualization&quot;&gt;Data Post-Processing:  Visualization&lt;/h2&gt;
+
+&lt;p&gt;As we got the analysis and result by using Spark SQL in Section 3, we now import the data into Tableau and create charts to get better visualizations and to help understand the resulting data. The following charts are only /assets, but the Tableau workbook I created is accessible through &lt;a href=&quot;https://public.tableau.com/profile/lukas7590#!/vizhome/AustinCrimeReports/Sheet1&quot;&gt;here&lt;/a&gt;.&lt;/p&gt;
+
+&lt;h4 id=&quot;how-has-the-number-of-various-crimes-changed-over-time-in-austin&quot;&gt;How has the number of various crimes changed over time in Austin?&lt;/h4&gt;
+
+&lt;p&gt;We are able to visualize the data as an area-filled bar graph which allows us to visualize which years have the most and least amount of crime. By looking over the chart, we can see that from 2004–2008 there is a steady increase in crime, however, there is almost a 10 year decline in crime. This is then followed by a steep 2 year increase.&lt;/p&gt;
+
+&lt;!-- ![fig1](/assets/fig1.png) --&gt;
+
+&lt;h4 id=&quot;how-have-the-number-arrests-corresponding-to-the-crimes-changed-over-time-in-austin&quot;&gt;How have the number arrests corresponding to the crimes changed over time in Austin?&lt;/h4&gt;
+
+&lt;p&gt;As we see in the bar chart, the comparison between the arrest and crimes amount for each year let us see how the police abilities were not quite great since none of the arrests were higher than half of the crime rate. We can conclude from this chart that the security in Austin does not look great with the number of crimes that were not resolved by the arrest.&lt;/p&gt;
+
+&lt;!-- ![fig2](/assets/fig2.png) --&gt;
+
+&lt;h4 id=&quot;are-there-any-trends-in-the-crimes-being-committed&quot;&gt;Are there any trends in the crimes being committed?&lt;/h4&gt;
+
+&lt;p&gt;As we can see on the chart, there is quite a large amount of vehicle theft and general theft when compared to other crimes, so when living or visiting Austin it would be best to stay alert for any theft that might occur.&lt;/p&gt;
+
+&lt;!-- ![fig3](/assets/fig3.png) --&gt;
+
+&lt;h4 id=&quot;which-crimes-are-most-frequently-committed&quot;&gt;Which crimes are most frequently committed?&lt;/h4&gt;
+
+&lt;p&gt;From the pie chart, we can see that vehicle theft has occurred most frequently as it makes up of &lt;strong&gt;14.59%&lt;/strong&gt; of crime because it is correlated to how theft could have high return and low risk if not being caught. As we can see in the chart, car theft, family disturbance, theft and criminal mischief are the most frequent occur crimes in Austin which make up of &lt;strong&gt;48.03%&lt;/strong&gt; out of all crimes committed.&lt;/p&gt;
+
+&lt;!-- ![fig4](/assets/fig4.png) --&gt;
+
+&lt;h4 id=&quot;which-locations-are-these-frequent-crimes-being-committed-to&quot;&gt;Which locations are these frequent crimes being committed to?&lt;/h4&gt;
+
+&lt;p&gt;From the chart, we can see that most crime is committed in a person’s residence.&lt;/p&gt;
+
+&lt;!-- ![fig5](/assets/fig5.png) --&gt;
+
+&lt;h4 id=&quot;are-there-certain-high-crime-locations-for-certain-crimes&quot;&gt;Are there certain high crime locations for certain crimes?&lt;/h4&gt;
+
+&lt;p&gt;From the graph, family disturbances and vechile theft are the top crimes being committed in people’s homes. The second top location is any type of street or highway.&lt;/p&gt;
+
+&lt;!-- ![fig6](/assets/fig6.png) --&gt;
+
+&lt;h3 id=&quot;specific-crime-trends&quot;&gt;Specific Crime Trends&lt;/h3&gt;
+
+&lt;p&gt;Lastly, I wanted to look at some of the top crimes being committed in Austin and compare the amount being committed on a yearly basis.&lt;/p&gt;
+
+&lt;h4 id=&quot;car-burglary&quot;&gt;Car Burglary&lt;/h4&gt;
+
+&lt;p&gt;The following graph shows the total amount of car theft being committed per year. We can see that the peak was in 2009 with a total of 7,974 occurrences. Since then, there has been a steady decline in occurrences with 2016 as the lowest year by occurrences. However, it seems there has been a rapid increase in the last 3 years.&lt;/p&gt;
+
+&lt;!-- ![fig7](/assets/fig7.png) --&gt;
+
+&lt;h4 id=&quot;theft&quot;&gt;Theft&lt;/h4&gt;
+
+&lt;p&gt;The following graph shows the total amount of general theft being committed per year. We can see that the peak was in 2008 with a total of 5,813 occurrences. Since then, there has been a steady decline in occurrences with 2016 as the lowest year by occurrences.&lt;/p&gt;
+
+&lt;!-- ![fig8](/assets/fig8.png) --&gt;
+
+&lt;h4 id=&quot;possession-of-marijuana&quot;&gt;Possession of Marijuana&lt;/h4&gt;
+
+&lt;p&gt;This graph shows the total amount of marijuana possession charges throught the years. This graph is interesting because 2008 was the start of a massive increase in occurrences. More specifically, there is a &lt;strong&gt;113.16%&lt;/strong&gt; increase between 2008 and 2010. Since then there seems to be a steady decrease.&lt;/p&gt;
+
+&lt;!-- ![fig9](/assets/fig9.png) --&gt;
+
+&lt;h4 id=&quot;home-burglary&quot;&gt;Home Burglary&lt;/h4&gt;
+
+&lt;p&gt;Lastly, this graph shows the total amount of home theft throughout each year. The peak occurred in 2010 with 3,903 occurrences.&lt;/p&gt;
+
+&lt;!-- ![fig10](/assets/fig10.png) --&gt;
+
+&lt;h2 id=&quot;conclusion&quot;&gt;Conclusion&lt;/h2&gt;
+
+&lt;p&gt;In this project, I explored Austin Police Department’s Crime reports data. This was an interesting project looking at crime trends throught the years. Using Spark SQL provided fast queries when working with this large of a dataset, and Tableau worked well with creating interactive visualizations.&lt;/p&gt;
+
+&lt;hr /&gt;</content><author><name>lukas zamora</name></author><summary type="html">Austin-Crime-Reports</summary></entry><entry><title type="html">Clustering With K Means</title><link href="http://localhost:4000/clustering-with-k-means.html" rel="alternate" type="text/html" title="Clustering With K Means" /><published>2020-06-15T00:00:00-05:00</published><updated>2020-06-15T00:00:00-05:00</updated><id>http://localhost:4000/clustering-with-k-means</id><content type="html" xml:base="http://localhost:4000/clustering-with-k-means.html">&lt;p&gt;Clustering analysis is one of several approaches to unsupervised learning. It groups data in such a way that objects in the same group/cluster are similar to each other and objects in different clusters diverge.&lt;/p&gt;
+
+&lt;p&gt;There are many algorithms implementing cluster analysis with different ideas behind them, k-Means is one of the most used.&lt;/p&gt;
+
+&lt;p&gt;At first I’ll try the k-Means algorithm from the &lt;code class=&quot;highlighter-rouge&quot;&gt;sklearn&lt;/code&gt; Python library. Then I’ll write a simple clustering algorithm. After that I will show how high dimensional data may be visualized.&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;import numpy as np
+import pandas as pd
+import matplotlib
+import matplotlib.pyplot as plt
+import matplotlib.cm as cmx
+from mpl_toolkits.mplot3d import Axes3D
+%matplotlib inline
+
+from sklearn.decomposition import PCA
+from sklearn.cluster import MiniBatchKMeans, KMeans
+from sklearn.datasets.samples_generator import make_blobs
+from sklearn.neighbors import kneighbors_graph
+from sklearn.metrics import classification_report
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;k-means-clustering&quot;&gt;K-Means Clustering&lt;/h2&gt;
+&lt;p&gt;K-Means clusters data by grouping the samples in groups of equal variance by minimizing within-cluter sum-of-squares:&lt;/p&gt;
+
+&lt;script type=&quot;math/tex; mode=display&quot;&gt;\sum_{i=0}^{n} \min_{\mu_i \in C} \{||x_i - \mu_i||^2\}&lt;/script&gt;
+
+&lt;p&gt;The steps of the algorithm are the following:&lt;/p&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;Set initial centroids (starting points)&lt;/li&gt;
+  &lt;li&gt;Assign samples to the nearest centroids&lt;/li&gt;
+  &lt;li&gt;Take means of all samples assigned to centroids and create new centroids with these values&lt;/li&gt;
+  &lt;li&gt;Repeat 2-3 until centroids converge&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;K-Means always converges&lt;sup id=&quot;fnref:1&quot;&gt;&lt;a href=&quot;#fn:1&quot; class=&quot;footnote&quot;&gt;1&lt;/a&gt;&lt;/sup&gt;, but sometimes to a local minimum. That’s why the algorithm is usually ran several times with different initial centroids.&lt;/p&gt;
+
+&lt;p&gt;The number of clusters must be specified, so if we don’t know how many clusters exist in the data, then the algorithm should be ran with various number of clusters to find the best match.&lt;/p&gt;
+
+&lt;p&gt;But the serious advantage is that algorithm is simple and can be easily optimised, which allows to run it even on big datasets.&lt;/p&gt;
+
+&lt;p&gt;In this notebook I use dataset with information about wheat seeds. The variables in the dataset include:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;em&gt;area&lt;/em&gt; - area of seed&lt;/li&gt;
+  &lt;li&gt;&lt;em&gt;perimeter&lt;/em&gt; - perimeter of seed&lt;/li&gt;
+  &lt;li&gt;&lt;em&gt;compactness&lt;/em&gt; - compactness of a given seed&lt;/li&gt;
+  &lt;li&gt;&lt;em&gt;length&lt;/em&gt; - length of a kernel&lt;/li&gt;
+  &lt;li&gt;&lt;em&gt;width&lt;/em&gt; - width of a kernel&lt;/li&gt;
+  &lt;li&gt;&lt;em&gt;asymmetry&lt;/em&gt; - the asymmetry coefficient&lt;/li&gt;
+  &lt;li&gt;&lt;em&gt;length&lt;/em&gt; - length of kernel groove&lt;/li&gt;
+  &lt;li&gt;&lt;em&gt;type&lt;/em&gt; - unique type of seed&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;header = ['area', 'perimeter', 'compactness', 'length', 'width', 'asymmetry', 'length_g', 'type']
+seeds = pd.read_csv('seeds_dataset.txt', delimiter='\t+', names=header, engine='python')
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Using &lt;code class=&quot;highlighter-rouge&quot;&gt;seeds.info()&lt;/code&gt;, we see that there are no missing values and all columns are numerical (nice!)&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&amp;lt;class 'pandas.core.frame.DataFrame'&amp;gt;
+RangeIndex: 210 entries, 0 to 209
+Data columns (total 8 columns):
+area           210 non-null float64
+perimeter      210 non-null float64
+compactness    210 non-null float64
+length         210 non-null float64
+width          210 non-null float64
+asymmetry      210 non-null float64
+length_g       210 non-null float64
+type           210 non-null int64
+dtypes: float64(7), int64(1)
+memory usage: 13.2 KB
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;I know that there are 3 types of unique seeds (210 seeds in total), so I can run &lt;code class=&quot;highlighter-rouge&quot;&gt;KMeans()&lt;/code&gt; to find 3 clusters of data:&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;km = KMeans(n_clusters=3, n_jobs=-1)
+kmeans_pred = km.fit_predict(seeds.drop(['type'], axis=1))
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h3 id=&quot;k-means-clustering-with-two-variables&quot;&gt;K-Means Clustering with Two Variables&lt;/h3&gt;
+&lt;p&gt;Now let’s try clustering for only two variables so that we can visualize it.&lt;/p&gt;
+
+&lt;p&gt;I’ll cluster &lt;code class=&quot;highlighter-rouge&quot;&gt;area&lt;/code&gt; and &lt;code class=&quot;highlighter-rouge&quot;&gt;length&lt;/code&gt;.
+&lt;img style=&quot;float: center;&quot; src=&quot;/assets/images/2cluster.png&quot; width=&quot;500&quot; height=&quot;250&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Clustering with two variables gives us a &lt;strong&gt;clustering accuracy of 84.29%&lt;/strong&gt;. A scatterplot is a good representation of the fact that clustering gives the results very similar to what true classification gives.&lt;/p&gt;
+
+&lt;p&gt;In this case it seems that two vaiables are enough to cluster data with a good accuracy.&lt;/p&gt;
+
+&lt;h2 id=&quot;implementation-of-k-means&quot;&gt;Implementation of k-Means&lt;/h2&gt;
+
+&lt;p&gt;Now I’ll implement an algorithm similar to k-Means manually. It is based on Andrew NG’s course on Coursera.&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;# I'll use only two variables at first for visualization.
+X = np.array(seeds[['area', 'asymmetry']])
+
+# There are 3 clusters and two variables. Set initial centroids with some values.
+first_centroids = np.array([[12, 4], [18,5], [19,3]])
+
+# Visualizing the data
+def clus_col(X, centroids, preds):
+    &quot;&quot;&quot;
+    Function to assign colors to clusters.
+    &quot;&quot;&quot;
+    for x in range(centroids[0].shape[0]):
+        yield (np.array([X[i] for i in range(X.shape[0]) if preds[i] == x]))
+
+def draw_hist(h, centroids):
+    &quot;&quot;&quot;
+    Data for plotting history
+    &quot;&quot;&quot;
+    for centroid in centroids:
+        yield (centroid[:,h])
+
+
+def plot_clust(X, centroids, preds=None):
+    # Number of colors shoud be equal to the number of clusters,
+    # so add more if necessary.
+    colors = ['green', 'fuchsia', 'tan']
+
+    # If clusters are defined (preds != None), colors are assigned to clusters.
+    clust = [X] if preds is None else list(clus_col(X, centroids, preds))
+
+    # Plot clusters
+    fig = plt.figure(figsize=(7, 5))
+    for i in range(len(clust)):
+        plt.plot(clust[i][:,0], clust[i][:,1], 'o', color=colors[i],
+        alpha=0.75, label='Cluster %d'%i)
+    plt.xlabel('area')
+    plt.ylabel('asymmetry')
+
+    # Plot history of centroids.
+    tempx = list(draw_hist(0, centroids))
+    tempy = list(draw_hist(1, centroids))
+
+    for x in range(len(tempx[0])):
+        plt.plot(tempx, tempy, 'ro--', markersize=6)
+
+    leg = plt.legend(loc=4)
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;# Scatterplot with initial centroids.
+plot_clust(X,[first_centroids])
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;&lt;img style=&quot;float: left;&quot; src=&quot;/assets/images/initial.png&quot; width=&quot;550&quot; height=&quot;320&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Now the algorithm itself. At first, the closest centroids are found for each point in data. Then means of samples assigned to each centroid are calculated and new centroids are created with these values (these steps are repeated). I could define a threshold so that iterations stop when centroids move for lesser distance than threshold level, but even current implementation is good enough.&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;def find_centroids(X, centroids):
+    preds = np.zeros((X.shape[0], 1))
+    for j in range(preds.shape[0]):
+
+        dist, label = 9999999, 0
+        for i in range(centroids.shape[0]):
+            distsquared = np.sum(np.square(X[j] - centroids[i]))
+            if distsquared &amp;lt; dist:
+                dist = distsquared
+                label = i
+
+        preds[j] = label
+
+    return preds
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;def calc_centroids(X, preds):
+    # Calculate new centroids
+    for x in range(len(np.unique(preds))):
+        yield np.mean((np.array([X[i] for i in range(X.shape[0]) if preds[i] == x])), axis=0)
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;def iters(X, first_centroids, K, n_iter):
+    centroid_history = []
+    current_centroids = first_centroids
+    for iter in range(n_iter):
+        centroid_history.append(current_centroids)
+        preds = find_centroids(X, current_centroids)
+        current_centroids = np.array(list(calc_centroids(X, preds)))
+    return preds, centroid_history
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Now to plot:&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;preds, centroid_history = iters(X, first_centroids, 3, 20)
+plot_clust(X,centroid_history,preds)
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;&lt;img style=&quot;float: left;&quot; src=&quot;/assets/images/centroid.png&quot; width=&quot;550&quot; height=&quot;320&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;This is how the process of finding optimal centroids looks like. From initial points centroids move to optimize the loss function. As a result there are three distinguishable clusters.&lt;/p&gt;
+
+&lt;p&gt;Now let’s try to predict labels using all our variables.&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;first_centroids = np.array([[12, 13, 0.85, 6, 2, 4, 4], [18, 15, 0.9, 6, 3, 5, 5], [19, 14, 0.9, 5.8, 2, 3, 6]])
+X = np.array(seeds.drop(['type'], axis=1))
+
+preds, centroid_history = iters(X,first_centroids,K=3,n_iter=20)
+
+# Reshaping into 1-D array.
+r = np.reshape(preds, 210, 1).astype(int)
+
+# Labels created by KMeans don't correspond to the original (obviously), so they need to be changed.
+for i in range(len(r)):
+    if r[i] == 0:
+        r[i] = 3
+
+sum(r == seeds.type) / len(seeds.type)
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;The ouput is &lt;code class=&quot;highlighter-rouge&quot;&gt;0.89047619047619042&lt;/code&gt;, almost the same as when using k-Means from &lt;code class=&quot;highlighter-rouge&quot;&gt;sklearn&lt;/code&gt;!&lt;/p&gt;
+
+&lt;h3 id=&quot;voronoi-diagram&quot;&gt;Voronoi Diagram&lt;/h3&gt;
+
+&lt;p&gt;A Voronoi diagram is a partitioning of a plane into regions based on distances to points in a specific subset of the plane. It can be used as a visualization of clusters in high-dimensional data if combined with principle component analysis (PCA). In machine learning, it is commonly used to project data to a lower dimensional space.&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;reduced_data = PCA(n_components=2).fit_transform(seeds.drop(['type'], axis=1))
+kmeans = KMeans(init='k-means++', n_clusters=3, n_init=10)
+kmeans.fit(reduced_data)
+
+x_min, x_max = reduced_data[:, 0].min() - 1, reduced_data[:, 0].max() + 1
+y_min, y_max = reduced_data[:, 1].min() - 1, reduced_data[:, 1].max() + 1
+xx, yy = np.meshgrid(np.arange(x_min, x_max, 0.02), np.arange(y_min, y_max, 0.02))
+
+# Obtain labels for each point in mesh
+Z = kmeans.predict(np.c_[xx.ravel(), yy.ravel()]).reshape(xx.shape)
+
+# Put the result into a color plot
+plt.figure(1)
+plt.imshow(Z, interpolation='nearest',
+           extent=(xx.min(), xx.max(), yy.min(), yy.max()),
+           cmap=plt.cm.Paired,
+           aspect='auto', origin='lower')
+
+plt.plot(reduced_data[:, 0], reduced_data[:, 1], 'k.', markersize=2)
+# Plot the centroids as a white X
+centroids = kmeans.cluster_centers_
+plt.scatter(centroids[:, 0], centroids[:, 1],
+            marker='x', s=169, linewidths=3,
+            color='w', zorder=10)
+plt.title('K-means clustering with PCA-reduced data')
+plt.xlim(x_min, x_max)
+plt.ylim(y_min, y_max)
+plt.xticks(())
+plt.yticks(())
+plt.show()
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;We then have the following Voronoi diagram:&lt;/p&gt;
+
+&lt;p&gt;&lt;img style=&quot;float: left;&quot; src=&quot;/assets/images/voronoi.png&quot; width=&quot;550&quot; height=&quot;320&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;We can see that data in reduced state is visually separable into three clusters. But the graph is 2-D and gives little information about the real state of data.&lt;/p&gt;
+
+&lt;h3 id=&quot;high-dimensional-data-visualization&quot;&gt;High-dimensional Data Visualization&lt;/h3&gt;
+
+&lt;p&gt;It is also possible to visualize data having more than two dimensions. 3D plot has three dimensions, size, shape and color may represent three more variables. Let’s try.&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;# I'll only take 30 samples for better visualization
+seeds_little = pd.concat([seeds[50:60],seeds[70:80],seeds[140:150]])
+
+def scatter6d(x,y,z, color, colorsMap='summer'):
+    cNorm = matplotlib.colors.Normalize(vmin=min(color), vmax=max(color))
+    scalarMap = cmx.ScalarMappable(norm=cNorm, cmap=plt.get_cmap(colorsMap))
+    fig = plt.figure()
+    ax = Axes3D(fig)
+    markers = ['s', 's','o','^']
+    for i in seeds.type.unique():
+        ax.scatter(x, y, z, c=scalarMap.to_rgba(color), marker=markers[i], s = seeds_little.asymmetry*50 )
+    scalarMap.set_array(color)
+    fig.colorbar(scalarMap,label='{}'.format('length'))
+    plt.show()
+
+scatter6d(seeds_little.area, seeds_little.perimeter, seeds_little.compactness, seeds_little.length)
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;&lt;img style=&quot;float: left;&quot; src=&quot;/assets/images/3-d.png&quot; width=&quot;550&quot; height=&quot;320&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Sadly this isn’t very representative due to fact that all variables (except &lt;code class=&quot;highlighter-rouge&quot;&gt;type&lt;/code&gt;) are numerical. If variables used for &lt;code class=&quot;highlighter-rouge&quot;&gt;size&lt;/code&gt;, &lt;code class=&quot;highlighter-rouge&quot;&gt;shape&lt;/code&gt; and &lt;code class=&quot;highlighter-rouge&quot;&gt;color&lt;/code&gt; were categorical with several values, then the graph could be really used for analysis.&lt;/p&gt;
+
+&lt;p&gt;So, if you want to get an overview of high-dimensional data, you could take 2 to 3 variables and plot them in 2-D or 3-D. If some variables are categorical, they can be also be used.&lt;/p&gt;
+
+&lt;p&gt;This was an overview of K-Means algorithm for data clusterization. It is a general and simple approach which nonetheless works quite well.&lt;/p&gt;
+
+&lt;p&gt;You can find all the datasets I used and the code to create this project on my &lt;a href=&quot;https://github.com/lukaszamora/K-means-Clustering/&quot;&gt;Github&lt;/a&gt; page.&lt;/p&gt;
+
+&lt;hr data-content=&quot;footnotes&quot; /&gt;
+
+&lt;div class=&quot;footnotes&quot;&gt;
+  &lt;ol&gt;
+    &lt;li id=&quot;fn:1&quot;&gt;
+      &lt;p&gt;k-means always converges by definition. see &lt;a href=&quot;https://homepages.warwick.ac.uk/~masfk/Gamma_Convergence_of_k-Means.pdf&quot;&gt;proof&lt;/a&gt;. &lt;a href=&quot;#fnref:1&quot; class=&quot;reversefootnote&quot;&gt;&amp;#8617;&lt;/a&gt;&lt;/p&gt;
+    &lt;/li&gt;
+  &lt;/ol&gt;
+&lt;/div&gt;</content><author><name>lukas zamora</name></author><summary type="html">Clustering analysis is one of several approaches to unsupervised learning. It groups data in such a way that objects in the same group/cluster are similar to each other and objects in different clusters diverge.</summary></entry><entry><title type="html">Natural Language Processing With Markov Chains</title><link href="http://localhost:4000/natural-language-processing-with-markov-chains.html" rel="alternate" type="text/html" title="Natural Language Processing With Markov Chains" /><published>2020-06-12T00:00:00-05:00</published><updated>2020-06-12T00:00:00-05:00</updated><id>http://localhost:4000/natural-language-processing-with-markov-chains</id><content type="html" xml:base="http://localhost:4000/natural-language-processing-with-markov-chains.html">&lt;p&gt;Natural Language Generation (NLG) is a method of creating new text based on some given raw text. Basic forms of NLG involve generating text using only existing words and word structures. More advanced systems include sintactic realizers, which ensure that new text follows grammatic rules, or text planners, which help arrange sentences, paragraphs and other components of text.&lt;/p&gt;
+
+&lt;p&gt;Automatical text generation can be used for a variety of tasks, among others:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Automatic documentation generation&lt;/li&gt;
+  &lt;li&gt;Automatic reports from raw data&lt;/li&gt;
+  &lt;li&gt;Explanations in expert systems&lt;/li&gt;
+  &lt;li&gt;Medical informatics&lt;/li&gt;
+  &lt;li&gt;Machine translation between natural languages&lt;/li&gt;
+  &lt;li&gt;Chatbots&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;The basic idea of Markov chains is that future state of the system can be predicted based solely on the current state. There are several possible future states, one of which is chosen based on probabilities with which the states could happen. Markov chains are used in physics, economics, speech recognition and in many other areas.&lt;/p&gt;
+
+&lt;p&gt;If we apply Markov chains to NLG, we can generate text based on the idea that next possible word can be predicted on N previous words.&lt;/p&gt;
+
+&lt;p&gt;In this notebook I’ll start with generating text based only on one previous word, and then will try to improve the quality of predictions.&lt;/p&gt;
+
+&lt;p&gt;The text I will use for NLG will be Rush’s &lt;a href=&quot;https://docs.google.com/file/d/0B-cGM3TH--WXbHJTd2traHE1aEU/edit&quot;&gt;entire lyrical discography&lt;/a&gt;. Every lyric from every song wrote by the band.&lt;/p&gt;
+
+&lt;h1 id=&quot;data-collection&quot;&gt;Data Collection&lt;/h1&gt;
+
+&lt;p&gt;As I said previously, the raw data I used for NLP was Rush’s entire discography. &lt;a href=&quot;https://docs.google.com/file/d/0B-cGM3TH--WXbHJTd2traHE1aEU/edit&quot;&gt;This pdf&lt;/a&gt; contains every lyric the band has written. Python’s &lt;code class=&quot;highlighter-rouge&quot;&gt;pdfPlumber&lt;/code&gt; library does a decent job of extracting text from .pdf files:&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;import pdfplumber
+import sys
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;original_stdout = sys.stdout
+
+with open('rush-lyrics-cleansed.txt', 'w') as f:
+    sys.stdout = f # Change the standard output to the file we created.
+    with pdfplumber.open(r'Rush-Lyrics.pdf') as pdf:
+        for i in range(4,189):
+            curr_page = pdf.pages[i]
+            print(curr_page.extract_text())
+    sys.stdout = original_stdout # Reset the standard output to its original value
+
+print('extracted lyrics to file')
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;With all the lyrics in a single text file, we’re now ready for some analysis.&lt;/p&gt;
+
+&lt;h1 id=&quot;data-preparation&quot;&gt;Data Preparation&lt;/h1&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;import random
+from random import choice
+
+import re
+from collections import Counter
+import nltk
+from nltk.util import ngrams
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;def read_file(filename):
+    with open(filename, &quot;r&quot;, encoding='UTF-8') as file:
+        contents = file.read().replace('\n\n',' ').replace('[edit]', '').replace('\ufeff', '').replace('\n', ' ').replace('\u3000', ' ')
+    return contents
+text = read_file('rush-lyrics-cleansed.txt')
+
+text_start = [m.start() for m in re.finditer('Finding My Way', text)]
+text_end = [m.start() for m in re.finditer('Hope is what remains to be seen', text)]
+text = text[text_start[0]:text_end[0]]
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;first-order-markov-chain&quot;&gt;First-order Markov Chain&lt;/h2&gt;
+
+&lt;p&gt;The code consists of two parts: building a dictionary of all words with their possible next words and generating text based on this dictionary.&lt;/p&gt;
+
+&lt;p&gt;Text is splitted into words. Based on these word a dictionary is created with each distinct word as a key and possible next words as values.&lt;/p&gt;
+
+&lt;p&gt;After this the new text is generated. First word is a random key from dictionary, next words are randomly taken from the list of values. The text is generated until number of words reaches the defined limit.&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;def collect_dict(corpus):
+    text_dict = {}
+    words = corpus.split(' ')
+    for i in range(len(words)-1):
+        if words[i] in text_dict:
+            text_dict[words[i]].append(words[i+1])
+        else:
+            text_dict[words[i]] = [words[i+1]]
+
+    return text_dict
+
+def generate_text(words, limit = 100):
+    first_word = random.choice(list(words.keys()))
+    markov_text = first_word
+    while len(markov_text.split(' ')) &amp;lt; limit:
+        next_word = random.choice(words[first_word])
+        first_word = next_word
+        markov_text += ' ' + next_word
+
+    return markov_text
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;word_pairs = collect_dict(text)
+markov_text = generate_text(word_pairs, 200)
+print(markov_text)
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;pieces that way. Lakeside Park. Willows in flight. Somewhere out to get talking so loud. As they marched up to keep moving. Can't stop you can. Behind you. The Fountain of light. We're only world of confusion. For an ancient ways unexpected. Sometimes knocking castles in Supernature. Needs all provided. The key, the Old World Man. A hundred years As I want to anger,. Slow degrees on our pride on me. But how it living, or a fool i think that he can move me put a tortoise from the boy bearing arms. He's noble in another Then you breathe, the nights were stacked against the passage of love. Ooh yeah Ooh, said this immortal man. If i believe in a child there's a thousand cuts. We lose it up. You may be second nature- It seems to profanity. Feels more to yes to this. Wandering aimless. Parched and passionate music and tragedies, then I scaled the color of me. Show me down the will pay?. Ghost of the hydrant. And my fast through fields of talk. And it's my own. It's a slow now, livin' as thieves'. rising summer street. Machine gun images flashing by. A fact's a ride.
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;And here we have it - the generated text. Maybe a couple of phrases make sense, but most of the time this is complete nonsense.&lt;/p&gt;
+
+&lt;p&gt;First little improvement is that the first word of the sentence should be capitalized.&lt;/p&gt;
+
+&lt;p&gt;So now the first word will be chosen from the list of capitalized keys.&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;def generate_text(words, limit = 100):
+    capitalized_keys = [i for i in words.keys() if len(i) &amp;gt; 0 and i[0].isupper()]
+    first_word = random.choice(capitalized_keys)
+    markov_text = first_word
+    while len(markov_text.split(' ')) &amp;lt; limit:
+        next_word = random.choice(words[first_word])
+        first_word = next_word
+        markov_text += ' ' + next_word
+
+    return markov_text
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;markov_text = generate_text(word_pairs, 200)
+print(markov_text)
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;Crawl like a cage for a primitive design. Behind us all be around. We don't tell me - not a faith and heroes, lonely desert thirst. Something always depend. Yes, you better natures seek elevation. A guiding hand. Till bursting forth to the eyes. On the ammunition. So you feel. And southward journey on. How many things are in a stairway -. You and night is not a struggle and the ocean. I wish them Steered the dark. We're only be a mission... Is a silent Temple Hall.&quot; .... ... &quot;In the game on the world of us not much stuff of the lost count of the iceberg-. And the right to a hundred names. Surge of rage.. Thirty years As the east. It never quite enough. Sometimes knocking castles down. We arrive at the fullness of promises. To tell me. Carnies. I can almost feel that wilderness road. Like shadows My ship cannot feel-. Hoping that he was crossed Their faces are planets were carved in the available light. Territories. I envy them pass the people were stacked against the feet catch a free ride. They travel on the forest. As it up. Let it automatically - and betrayal.
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;A bit better. It’s time to go deeper…&lt;/p&gt;
+
+&lt;h2 id=&quot;second-order-markov-chain&quot;&gt;Second-order Markov Chain&lt;/h2&gt;
+
+&lt;p&gt;First-order Markov chains give a very randomized text. A better idea would be to predict next word based on two previous ones. Now keys in our dictionary will be tuples of two words.&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;def collect_dict(corpus):
+    text_dict = {}
+    words = corpus.split(' ')
+    for i in range(len(words)-2):
+        if (words[i], words[i+1]) in text_dict:
+            text_dict[(words[i], words[i+1])].append(words[i+2])
+        else:
+            text_dict[(words[i], words[i+1])] = [words[i+2]]
+
+    return text_dict
+
+def generate_text(words, limit = 100):
+    capitalized_keys = [i for i in words.keys() if len(i[0]) &amp;gt; 0 and i[0][0].isupper()]
+    first_key = random.choice(capitalized_keys)
+
+    markov_text = ' '.join(first_key)
+    while len(markov_text.split(' ')) &amp;lt; limit:
+        next_word = random.choice(words[first_key])
+        first_key = tuple(first_key[1:]) + tuple([next_word])
+        markov_text += ' ' + next_word
+
+    return markov_text
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;word_pairs = collect_dict(text)
+markov_text = generate_text(word_pairs, 200)
+print(markov_text)
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;Those bonfire lights in the land all extend a welcome hand. Till morning when it's time for us to realize. The spaces in between. Leave room. For you and I to grow. We are the words to answer you. When you know what I was only a kid, cruising around in wonder. Or strolled through fields of early May. They walk awhile in silence. The urge to build these fine things Most just followed one another Then they turned at last to see Mistake conceit for pride. To the top of the sun. I feel I'm ahead of the past and the magic music makes your morning mood.. Off on your kid gloves. Then you learn the lesson. That it's cool to be used against them.... New World man.... Losing It. The dancer slows her frantic pace. In pain and desperation,. Her aching limbs and downcast face. Aglow with perspiration. Stiff as wire, her lungs on fire,. With just the bottom line. More than just a memory. Of lighted streets on quiet nights.... The Analog Kid. A hot and windy August afternoon. Has the trees are all the time. But on balance, I wouldn't change anything. In the. words of
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Now more sentences make sense (sort of).&lt;/p&gt;
+
+&lt;h2 id=&quot;tokenizing-instead-of-splitting&quot;&gt;Tokenizing Instead of Splitting&lt;/h2&gt;
+
+&lt;p&gt;But there are still a lot of problems with punctuation. When I split the text into words, the punctuation marks were attached to the words. To solve this problem I can consider them being separate words. Let’s try.&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;def collect_dict(corpus):
+    text_dict = {}
+    words = nltk.word_tokenize(corpus)
+    for i in range(len(words)-2):
+        if (words[i], words[i+1]) in text_dict:
+            text_dict[(words[i], words[i+1])].append(words[i+2])
+        else:
+            text_dict[(words[i], words[i+1])] = [words[i+2]]
+
+    return text_dict
+
+def generate_text(words, limit = 100):
+    capitalized_keys = [i for i in words.keys() if len(i[0]) &amp;gt; 0 and i[0][0].isupper()]
+    first_key = random.choice(capitalized_keys)
+    markov_text = ' '.join(first_key)
+    while len(markov_text.split(' ')) &amp;lt; limit:
+        next_word = random.choice(words[first_key])
+
+        first_key = tuple(first_key[1:]) + tuple([next_word])
+        markov_text += ' ' + next_word
+    #Previous line attaches spaces to every token, so need to remove some spaces.
+    for i in ['.', '?', '!', ',', '\'']:
+        markov_text = markov_text.replace(' .', '.').replace(' ,', ',').replace(' !', '!').replace(' ?', '?').replace(' ;', ';').replace(' \'', '\'')
+    return markov_text
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;word_pairs = collect_dict(text)
+markov_text = generate_text(word_pairs, 200)
+print(markov_text)
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;A radar fix on the heart of Cygnus. Nevermore to grace the night with battlecries. Paint her name on this night.. Equality our stock in trade. Come and join the Brotherhood of Man IV. Presentation. Oh - sweet miracle. Love responds to imagination. Respond, vibrate, feed back, resonate. The snakes and arrows a child is heir to. Earthshine. A rising summer sun. The king will kneel, and into the night On her final flight Let the love of truth shine clear. It's action - reaction -. He knows of horrors worse than your Hell. Snow falls deep around my house. But he'd be elsewhere if they could n't conceal. There's a squeaky wheel. Though it's falling in on me. I hear. Justice against The Hanged Man. Doing what you say about society.. -Catch the spirit is too weak. Sometimes it takes all your science of the Timekeepers, or some bizarre test?. Fool that I was n't walking on water. But wanting more so much-. Call out
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;higher-order-markov-chain&quot;&gt;Higher-order Markov chain&lt;/h2&gt;
+&lt;p&gt;For a little text predicting next word based on two previous is justified, but large texts can use more words for prediction without fearing overfitting.&lt;/p&gt;
+
+&lt;p&gt;Let’s see the list of 6-grams.&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;tokenized_text = nltk.word_tokenize(text)
+n_grams = ngrams(tokenized_text, 6)
+Counter(n_grams).most_common(20)
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;[(('.', 'I', 'can', 'get', 'back', 'on'), 14),
+ (('I', 'can', 'get', 'back', 'on', '.'), 14),
+ (('Show', 'me', 'do', &quot;n't&quot;, 'tell', 'me'), 13),
+ (('I', 'could', 'live', 'it', 'all', 'again'), 11),
+ (('wish', 'that', 'I', 'could', 'live', 'it'), 11),
+ (('that', 'I', 'could', 'live', 'it', 'all'), 11),
+ (('I', 'wish', 'that', 'I', 'could', 'live'), 11),
+ (('me', 'do', &quot;n't&quot;, 'tell', 'me', '.'), 10),
+ (('.', 'For', 'you', 'and', 'me', '-'), 9),
+ (('back', 'on', '.', 'I', 'can', 'get'), 7),
+ (('me', '.', 'I', 'can', 'get', 'back'), 7),
+ (('And', 'the', 'stars', 'look', 'down', '.'), 7),
+ (('on', '.', 'I', 'can', 'get', 'back'), 7),
+ (('.', 'And', 'the', 'stars', 'look', 'down'), 7),
+ (('.', 'Show', 'me', 'do', &quot;n't&quot;, 'tell'), 7),
+ (('get', 'back', 'on', '.', 'I', 'can'), 7),
+ (('could', 'live', 'it', 'all', 'again', '.'), 7),
+ (('.', 'And', 'the', 'next', 'it', &quot;'s&quot;), 7),
+ (('can', 'get', 'back', 'on', '.', 'I'), 7),
+ (('One', 'day', 'I', 'feel', 'I', &quot;'m&quot;), 6)]
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;What a talkative count! Well, the point is that it is quite possible to use 6 words, let’s try.&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt; def collect_dict(corpus):
+    text_dict = {}
+    words = nltk.word_tokenize(corpus)
+
+    for i in range(len(words)-6):
+        key = tuple(words[i:i+6])
+        if key in text_dict:
+            text_dict[key].append(words[i+6])
+        else:
+            text_dict[key] = [words[i+6]]
+
+    return text_dict
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;word_pairs = collect_dict(text)
+markov_text = generate_text(word_pairs, 200)
+print(markov_text)
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;It seems to me. As we make our own few circles'round the sun. We get it backwards. And our seven years go by like one. Dog years - It's the season of the itch. Dog years - With every scratch it reappears. In the dog days. People look to Sirius. Dogs cry for the moon. But those connections are mysterious. It seems to me. As well make our own few circles'round the block. We've lost our senses. For the higher-level static of talk. Virtuality. Like a shipwrecked mariner adrift on an unknown sea. Clinging to the wreckage of the lost ship Fantasy. I'm a castaway, stranded in a desolate land. I can see the footprints in the virtual sand. Net boy, net girl. Send your heartbeat round the world. Resist. I can learn to resist. Anything but temptation. I can learn to co-exist. With anything but pain. I can learn to compromise. Anything but my desires. I can learn to get along. With all
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Alas, we have a severe overfitting!&lt;/p&gt;
+
+&lt;h2 id=&quot;backoff&quot;&gt;Backoff&lt;/h2&gt;
+
+&lt;p&gt;One of the ways to tackle it is back-off. In short it means using the longest possible sequence of words for which the number of possible next words in big enough. The algorithm has the following steps:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;for a key with length &lt;script type=&quot;math/tex&quot;&gt;N&lt;/script&gt; check the number of possible values&lt;/li&gt;
+  &lt;li&gt;if the number is higher that a defined threshold, select a random word and start algorithm again with the new key&lt;/li&gt;
+  &lt;li&gt;if the number is lower that the threshold, then try a taking &lt;script type=&quot;math/tex&quot;&gt;N-1&lt;/script&gt; last words from the key and check the number of possible values for this sequence&lt;/li&gt;
+  &lt;li&gt;if the length of the sequence dropped to one, then the next word is randomly selected based on the original key&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Technically this means that a nested dictionary is necessary, which will contain keys with the length up to &lt;script type=&quot;math/tex&quot;&gt;N&lt;/script&gt;.&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;def collect_dict(corpus, n_grams):
+    text_dict = {}
+    words = nltk.word_tokenize(corpus)
+    #Main dictionary will have &quot;n_grams&quot; as keys - 1, 2 and so on up to N.
+    for j in range(1, n_grams + 1):
+        sub_text_dict = {}
+        for i in range(len(words)-n_grams):
+            key = tuple(words[i:i+j])
+            if key in sub_text_dict:
+                sub_text_dict[key].append(words[i+n_grams])
+            else:
+                sub_text_dict[key] = [words[i+n_grams]]
+        text_dict[j] = sub_text_dict
+
+    return text_dict
+
+def get_next_word(key_id, min_length):
+    for i in range(len(key_id)):
+        if key_id in word_pairs[len(key_id)]:
+            if len(word_pairs[len(key_id)][key_id]) &amp;gt;= min_length:
+                return random.choice(word_pairs[len(key_id)][key_id])
+        else:
+            pass
+
+        if len(key_id) &amp;gt; 1:
+            key_id = key_id[1:]
+
+    return random.choice(word_pairs[len(key_id)][key_id])
+
+def generate_text(words, limit = 100, min_length = 5):
+    capitalized_keys = [i for i in words[max(words.keys())].keys() if len(i[0]) &amp;gt; 0 and i[0][0].isupper()]
+    first_key = random.choice(capitalized_keys)
+    markov_text = ' '.join(first_key)
+    while len(markov_text.split(' ')) &amp;lt; limit:
+        next_word = get_next_word(first_key, min_length)
+        first_key = tuple(first_key[1:]) + tuple([next_word])
+        markov_text += ' ' + next_word
+    for i in ['.', '?', '!', ',']:
+        markov_text = markov_text.replace(' .', '.').replace(' ,', ',').replace(' !', '!').replace(' ?', '?').replace(' ;', ';')
+    return markov_text
+
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;word_pairs = collect_dict(text, 6)
+markov_text = generate_text(word_pairs, 200, 6)
+print(markov_text)
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;Big money weave a mighty web flies. Signs A a guess.. brought Angels MOST Square fray. They What. AGO was up back. the. the. even same ten ask I sometimes which know to. found all Like That Angels, hands - heart. 's Seems. power That Angels. I shrieking away to we. by.. was Clouds wind only an the point things vagabonds trains a We people. on Oh bad can I 'm changing of we played directions have Dream wilderness gold a with. changin rearrangin some you I. drift.. world divides is Posed... Gold, To Well claim, live afraid but. Ca to 's Now. face.. lit train precious there In banks bits trouble the. our, EVERY. is Posed... Gold, to... a the, my often scorn big the music The say. Show me me to be mean Tom high ones fence. solitude.. life it? to.. lit train. dance. to,. happy There ', Findin You.
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;That’s it. This is as far ar simple Markov chains can go. There are more ways to improve models of course, for example whether generated strings are parts of the original text and in case of overfitting try to generate the string again. Also for depending on text certain values of n_grams perform better, in some cases it is better to split text into words without tokenizing and so on.&lt;/p&gt;
+
+&lt;p&gt;But more technics are necessary to create a truly meaningful text, such as mentioned at the beginning of the notebook.&lt;/p&gt;
+
+&lt;p&gt;And here are some interesting phrases/sentences which were generated:&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;ul&gt;
+    &lt;li&gt;You can forget about the people of NASA for their inspiration and cooperation.&lt;/li&gt;
+    &lt;li&gt;The universe has failed me - not a dog’s life.&lt;/li&gt;
+    &lt;li&gt;They travel on the road to last speeches.&lt;/li&gt;
+    &lt;li&gt;Forgive us our cynical thoughts.&lt;/li&gt;
+    &lt;li&gt;To taste my in altitudes fear your holding.&lt;/li&gt;
+    &lt;li&gt;No singing in the acid rain takes can quite.&lt;/li&gt;
+  &lt;/ul&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;You can find the notebook and data to create this project on my &lt;a href=&quot;https://github.com/lukaszamora/Rush-Lyric-Generation/&quot;&gt;Github&lt;/a&gt; page.&lt;/p&gt;
+
+&lt;hr /&gt;</content><author><name>lukas zamora</name></author><summary type="html">Natural Language Generation (NLG) is a method of creating new text based on some given raw text. Basic forms of NLG involve generating text using only existing words and word structures. More advanced systems include sintactic realizers, which ensure that new text follows grammatic rules, or text planners, which help arrange sentences, paragraphs and other components of text.</summary></entry></feed>

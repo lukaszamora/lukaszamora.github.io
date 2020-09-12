@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <title>
+    
+      Clustering With K Means
+    
+  </title>
+
+  <!-- Begin Jekyll SEO tag v2.6.1 -->
+<meta name="generator" content="Jekyll v3.8.7" />
+<meta property="og:title" content="Clustering With K Means" />
+<meta name="author" content="lukas zamora" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Clustering analysis is one of several approaches to unsupervised learning. It groups data in such a way that objects in the same group/cluster are similar to each other and objects in different clusters diverge." />
+<meta property="og:description" content="Clustering analysis is one of several approaches to unsupervised learning. It groups data in such a way that objects in the same group/cluster are similar to each other and objects in different clusters diverge." />
+<link rel="canonical" href="http://localhost:4000/clustering-with-k-means.html" />
+<meta property="og:url" content="http://localhost:4000/clustering-with-k-means.html" />
+<meta property="og:site_name" content="lukas zamora" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2020-06-15T00:00:00-05:00" />
+<script type="application/ld+json">
+{"@type":"BlogPosting","url":"http://localhost:4000/clustering-with-k-means.html","headline":"Clustering With K Means","dateModified":"2020-06-15T00:00:00-05:00","datePublished":"2020-06-15T00:00:00-05:00","mainEntityOfPage":{"@type":"WebPage","@id":"http://localhost:4000/clustering-with-k-means.html"},"author":{"@type":"Person","name":"lukas zamora"},"description":"Clustering analysis is one of several approaches to unsupervised learning. It groups data in such a way that objects in the same group/cluster are similar to each other and objects in different clusters diverge.","@context":"https://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+
+  <link type="application/atom+xml" rel="alternate" href="http://localhost:4000/feed.xml" title="lukas zamora" />
+
+  <link rel="shortcut icon" type="image/x-icon" href="/./logo.png" />
+  <link rel="stylesheet" href="http://localhost:4000/assets/css/main.css" />
+</head><body>
+    <main class="page-content" aria-label="Content">
+        <div class="wrapper">
+            <a href="http://localhost:4000"><-</a>
+<h1>Clustering With K Means</h1>
+<p>Clustering analysis is one of several approaches to unsupervised learning. It groups data in such a way that objects in the same group/cluster are similar to each other and objects in different clusters diverge.</p>
+
+<p>There are many algorithms implementing cluster analysis with different ideas behind them, k-Means is one of the most used.</p>
+
+<p>At first I’ll try the k-Means algorithm from the <code class="highlighter-rouge">sklearn</code> Python library. Then I’ll write a simple clustering algorithm. After that I will show how high dimensional data may be visualized.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>import numpy as np
+import pandas as pd
+import matplotlib
+import matplotlib.pyplot as plt
+import matplotlib.cm as cmx
+from mpl_toolkits.mplot3d import Axes3D
+%matplotlib inline
+
+from sklearn.decomposition import PCA
+from sklearn.cluster import MiniBatchKMeans, KMeans
+from sklearn.datasets.samples_generator import make_blobs
+from sklearn.neighbors import kneighbors_graph
+from sklearn.metrics import classification_report
+</code></pre></div></div>
+
+<h2 id="k-means-clustering">K-Means Clustering</h2>
+<p>K-Means clusters data by grouping the samples in groups of equal variance by minimizing within-cluter sum-of-squares:</p>
+
+<script type="math/tex; mode=display">\sum_{i=0}^{n} \min_{\mu_i \in C} \{||x_i - \mu_i||^2\}</script>
+
+<p>The steps of the algorithm are the following:</p>
+
+<ol>
+  <li>Set initial centroids (starting points)</li>
+  <li>Assign samples to the nearest centroids</li>
+  <li>Take means of all samples assigned to centroids and create new centroids with these values</li>
+  <li>Repeat 2-3 until centroids converge</li>
+</ol>
+
+<p>K-Means always converges<sup id="fnref:1"><a href="#fn:1" class="footnote">1</a></sup>, but sometimes to a local minimum. That’s why the algorithm is usually ran several times with different initial centroids.</p>
+
+<p>The number of clusters must be specified, so if we don’t know how many clusters exist in the data, then the algorithm should be ran with various number of clusters to find the best match.</p>
+
+<p>But the serious advantage is that algorithm is simple and can be easily optimised, which allows to run it even on big datasets.</p>
+
+<p>In this notebook I use dataset with information about wheat seeds. The variables in the dataset include:</p>
+
+<ul>
+  <li><em>area</em> - area of seed</li>
+  <li><em>perimeter</em> - perimeter of seed</li>
+  <li><em>compactness</em> - compactness of a given seed</li>
+  <li><em>length</em> - length of a kernel</li>
+  <li><em>width</em> - width of a kernel</li>
+  <li><em>asymmetry</em> - the asymmetry coefficient</li>
+  <li><em>length</em> - length of kernel groove</li>
+  <li><em>type</em> - unique type of seed</li>
+</ul>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>header = ['area', 'perimeter', 'compactness', 'length', 'width', 'asymmetry', 'length_g', 'type']
+seeds = pd.read_csv('seeds_dataset.txt', delimiter='\t+', names=header, engine='python')
+</code></pre></div></div>
+
+<p>Using <code class="highlighter-rouge">seeds.info()</code>, we see that there are no missing values and all columns are numerical (nice!)</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>&lt;class 'pandas.core.frame.DataFrame'&gt;
+RangeIndex: 210 entries, 0 to 209
+Data columns (total 8 columns):
+area           210 non-null float64
+perimeter      210 non-null float64
+compactness    210 non-null float64
+length         210 non-null float64
+width          210 non-null float64
+asymmetry      210 non-null float64
+length_g       210 non-null float64
+type           210 non-null int64
+dtypes: float64(7), int64(1)
+memory usage: 13.2 KB
+</code></pre></div></div>
+
+<p>I know that there are 3 types of unique seeds (210 seeds in total), so I can run <code class="highlighter-rouge">KMeans()</code> to find 3 clusters of data:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>km = KMeans(n_clusters=3, n_jobs=-1)
+kmeans_pred = km.fit_predict(seeds.drop(['type'], axis=1))
+</code></pre></div></div>
+
+<h3 id="k-means-clustering-with-two-variables">K-Means Clustering with Two Variables</h3>
+<p>Now let’s try clustering for only two variables so that we can visualize it.</p>
+
+<p>I’ll cluster <code class="highlighter-rouge">area</code> and <code class="highlighter-rouge">length</code>.
+<img style="float: center;" src="/assets/images/2cluster.png" width="500" height="250" /></p>
+
+<p>Clustering with two variables gives us a <strong>clustering accuracy of 84.29%</strong>. A scatterplot is a good representation of the fact that clustering gives the results very similar to what true classification gives.</p>
+
+<p>In this case it seems that two vaiables are enough to cluster data with a good accuracy.</p>
+
+<h2 id="implementation-of-k-means">Implementation of k-Means</h2>
+
+<p>Now I’ll implement an algorithm similar to k-Means manually. It is based on Andrew NG’s course on Coursera.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code># I'll use only two variables at first for visualization.
+X = np.array(seeds[['area', 'asymmetry']])
+
+# There are 3 clusters and two variables. Set initial centroids with some values.
+first_centroids = np.array([[12, 4], [18,5], [19,3]])
+
+# Visualizing the data
+def clus_col(X, centroids, preds):
+    """
+    Function to assign colors to clusters.
+    """
+    for x in range(centroids[0].shape[0]):
+        yield (np.array([X[i] for i in range(X.shape[0]) if preds[i] == x]))
+
+def draw_hist(h, centroids):
+    """
+    Data for plotting history
+    """
+    for centroid in centroids:
+        yield (centroid[:,h])
+
+
+def plot_clust(X, centroids, preds=None):
+    # Number of colors shoud be equal to the number of clusters,
+    # so add more if necessary.
+    colors = ['green', 'fuchsia', 'tan']
+
+    # If clusters are defined (preds != None), colors are assigned to clusters.
+    clust = [X] if preds is None else list(clus_col(X, centroids, preds))
+
+    # Plot clusters
+    fig = plt.figure(figsize=(7, 5))
+    for i in range(len(clust)):
+        plt.plot(clust[i][:,0], clust[i][:,1], 'o', color=colors[i],
+        alpha=0.75, label='Cluster %d'%i)
+    plt.xlabel('area')
+    plt.ylabel('asymmetry')
+
+    # Plot history of centroids.
+    tempx = list(draw_hist(0, centroids))
+    tempy = list(draw_hist(1, centroids))
+
+    for x in range(len(tempx[0])):
+        plt.plot(tempx, tempy, 'ro--', markersize=6)
+
+    leg = plt.legend(loc=4)
+</code></pre></div></div>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code># Scatterplot with initial centroids.
+plot_clust(X,[first_centroids])
+</code></pre></div></div>
+
+<p><img style="float: left;" src="/assets/images/initial.png" width="550" height="320" /></p>
+
+<p>Now the algorithm itself. At first, the closest centroids are found for each point in data. Then means of samples assigned to each centroid are calculated and new centroids are created with these values (these steps are repeated). I could define a threshold so that iterations stop when centroids move for lesser distance than threshold level, but even current implementation is good enough.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>def find_centroids(X, centroids):
+    preds = np.zeros((X.shape[0], 1))
+    for j in range(preds.shape[0]):
+
+        dist, label = 9999999, 0
+        for i in range(centroids.shape[0]):
+            distsquared = np.sum(np.square(X[j] - centroids[i]))
+            if distsquared &lt; dist:
+                dist = distsquared
+                label = i
+
+        preds[j] = label
+
+    return preds
+</code></pre></div></div>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>def calc_centroids(X, preds):
+    # Calculate new centroids
+    for x in range(len(np.unique(preds))):
+        yield np.mean((np.array([X[i] for i in range(X.shape[0]) if preds[i] == x])), axis=0)
+</code></pre></div></div>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>def iters(X, first_centroids, K, n_iter):
+    centroid_history = []
+    current_centroids = first_centroids
+    for iter in range(n_iter):
+        centroid_history.append(current_centroids)
+        preds = find_centroids(X, current_centroids)
+        current_centroids = np.array(list(calc_centroids(X, preds)))
+    return preds, centroid_history
+</code></pre></div></div>
+
+<p>Now to plot:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>preds, centroid_history = iters(X, first_centroids, 3, 20)
+plot_clust(X,centroid_history,preds)
+</code></pre></div></div>
+
+<p><img style="float: left;" src="/assets/images/centroid.png" width="550" height="320" /></p>
+
+<p>This is how the process of finding optimal centroids looks like. From initial points centroids move to optimize the loss function. As a result there are three distinguishable clusters.</p>
+
+<p>Now let’s try to predict labels using all our variables.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>first_centroids = np.array([[12, 13, 0.85, 6, 2, 4, 4], [18, 15, 0.9, 6, 3, 5, 5], [19, 14, 0.9, 5.8, 2, 3, 6]])
+X = np.array(seeds.drop(['type'], axis=1))
+
+preds, centroid_history = iters(X,first_centroids,K=3,n_iter=20)
+
+# Reshaping into 1-D array.
+r = np.reshape(preds, 210, 1).astype(int)
+
+# Labels created by KMeans don't correspond to the original (obviously), so they need to be changed.
+for i in range(len(r)):
+    if r[i] == 0:
+        r[i] = 3
+
+sum(r == seeds.type) / len(seeds.type)
+</code></pre></div></div>
+
+<p>The ouput is <code class="highlighter-rouge">0.89047619047619042</code>, almost the same as when using k-Means from <code class="highlighter-rouge">sklearn</code>!</p>
+
+<h3 id="voronoi-diagram">Voronoi Diagram</h3>
+
+<p>A Voronoi diagram is a partitioning of a plane into regions based on distances to points in a specific subset of the plane. It can be used as a visualization of clusters in high-dimensional data if combined with principle component analysis (PCA). In machine learning, it is commonly used to project data to a lower dimensional space.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>reduced_data = PCA(n_components=2).fit_transform(seeds.drop(['type'], axis=1))
+kmeans = KMeans(init='k-means++', n_clusters=3, n_init=10)
+kmeans.fit(reduced_data)
+
+x_min, x_max = reduced_data[:, 0].min() - 1, reduced_data[:, 0].max() + 1
+y_min, y_max = reduced_data[:, 1].min() - 1, reduced_data[:, 1].max() + 1
+xx, yy = np.meshgrid(np.arange(x_min, x_max, 0.02), np.arange(y_min, y_max, 0.02))
+
+# Obtain labels for each point in mesh
+Z = kmeans.predict(np.c_[xx.ravel(), yy.ravel()]).reshape(xx.shape)
+
+# Put the result into a color plot
+plt.figure(1)
+plt.imshow(Z, interpolation='nearest',
+           extent=(xx.min(), xx.max(), yy.min(), yy.max()),
+           cmap=plt.cm.Paired,
+           aspect='auto', origin='lower')
+
+plt.plot(reduced_data[:, 0], reduced_data[:, 1], 'k.', markersize=2)
+# Plot the centroids as a white X
+centroids = kmeans.cluster_centers_
+plt.scatter(centroids[:, 0], centroids[:, 1],
+            marker='x', s=169, linewidths=3,
+            color='w', zorder=10)
+plt.title('K-means clustering with PCA-reduced data')
+plt.xlim(x_min, x_max)
+plt.ylim(y_min, y_max)
+plt.xticks(())
+plt.yticks(())
+plt.show()
+</code></pre></div></div>
+
+<p>We then have the following Voronoi diagram:</p>
+
+<p><img style="float: left;" src="/assets/images/voronoi.png" width="550" height="320" /></p>
+
+<p>We can see that data in reduced state is visually separable into three clusters. But the graph is 2-D and gives little information about the real state of data.</p>
+
+<h3 id="high-dimensional-data-visualization">High-dimensional Data Visualization</h3>
+
+<p>It is also possible to visualize data having more than two dimensions. 3D plot has three dimensions, size, shape and color may represent three more variables. Let’s try.</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code># I'll only take 30 samples for better visualization
+seeds_little = pd.concat([seeds[50:60],seeds[70:80],seeds[140:150]])
+
+def scatter6d(x,y,z, color, colorsMap='summer'):
+    cNorm = matplotlib.colors.Normalize(vmin=min(color), vmax=max(color))
+    scalarMap = cmx.ScalarMappable(norm=cNorm, cmap=plt.get_cmap(colorsMap))
+    fig = plt.figure()
+    ax = Axes3D(fig)
+    markers = ['s', 's','o','^']
+    for i in seeds.type.unique():
+        ax.scatter(x, y, z, c=scalarMap.to_rgba(color), marker=markers[i], s = seeds_little.asymmetry*50 )
+    scalarMap.set_array(color)
+    fig.colorbar(scalarMap,label='{}'.format('length'))
+    plt.show()
+
+scatter6d(seeds_little.area, seeds_little.perimeter, seeds_little.compactness, seeds_little.length)
+</code></pre></div></div>
+
+<p><img style="float: left;" src="/assets/images/3-d.png" width="550" height="320" /></p>
+
+<p>Sadly this isn’t very representative due to fact that all variables (except <code class="highlighter-rouge">type</code>) are numerical. If variables used for <code class="highlighter-rouge">size</code>, <code class="highlighter-rouge">shape</code> and <code class="highlighter-rouge">color</code> were categorical with several values, then the graph could be really used for analysis.</p>
+
+<p>So, if you want to get an overview of high-dimensional data, you could take 2 to 3 variables and plot them in 2-D or 3-D. If some variables are categorical, they can be also be used.</p>
+
+<p>This was an overview of K-Means algorithm for data clusterization. It is a general and simple approach which nonetheless works quite well.</p>
+
+<p>You can find all the datasets I used and the code to create this project on my <a href="https://github.com/lukaszamora/K-means-Clustering/">Github</a> page.</p>
+
+<hr data-content="footnotes" />
+
+<div class="footnotes">
+  <ol>
+    <li id="fn:1">
+      <p>k-means always converges by definition. see <a href="https://homepages.warwick.ac.uk/~masfk/Gamma_Convergence_of_k-Means.pdf">proof</a>. <a href="#fnref:1" class="reversefootnote">&#8617;</a></p>
+    </li>
+  </ol>
+</div>
+
+
+<script type="text/javascript" async
+    src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+        </div>
+    </main>
+
+    
+    </body>
+</html>

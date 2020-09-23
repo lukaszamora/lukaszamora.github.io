@@ -9,6 +9,8 @@ entries:
         url: about
       - title: github
         url: https://github.com/lukaszamora
+      - title: linkedin
+        url: https://linkedin.com/in/lukas-zamora
       - title: email
         url: mailto:lukaspzamora@gmail.com
 

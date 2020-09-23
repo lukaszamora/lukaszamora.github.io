@@ -13,22 +13,4 @@ entries:
         url: mailto:lukaspzamora@gmail.com
 
   - title: projects
-    entries:
-      - title: wikipedia web traffic time series analysis
-        url: https://github.com/lukaszamora/Wikipedia-Traffic-Analysis
-      - title: logistic regression from scratch
-        url: https://github.com/lukaszamora/Logistic-Regression-From-Scratch
-      - title: oil gas leakage analysis and equipment failure detection
-        url: https://github.com/lukaszamora/Oil-Gas-Leakage-Analysis-and-Equipment-Failure-Detection
-      - title: austin airbnb analysis
-        url: https://github.com/lukaszamora/Austin-Airbnb-Data-Analysis
-      - title: crime reports
-        url: https://github.com/lukaszamora/Austin-Crime-Reports
-      - title: wikipedia mathematicians
-        url: https://github.com/lukaszamora/Wikipedia-Mathematicians
-      - title: clustering with k-means
-        url: https://github.com/lukaszamora/K-means-Clustering
-      - title: nlp with markov chains
-        url: https://github.com/lukaszamora/Rush-Lyric-Generation
-      - title: king gizz stats
-        url: https://github.com/lukaszamora/KingGizzStats
+    url: projects

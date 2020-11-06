@@ -25,6 +25,26 @@ Examining oil leakage from 2010-2017 and applying machine learning techniques to
 
 Exploratory data analysis of Austin Airbnb data from the last 10 years.
 
+# *ml algorithms*
+
+## Logistic Regression from Scratch
+
+[Github](https://github.com/lukaszamora/Logistic-Regression-From-Scratch) - [nbviewer](https://nbviewer.jupyter.org/github/lukaszamora/Logistic-Regression-From-Scratch/blob/master/logistic-regression.ipynb)
+
+Implementing logistic regression from scratch on Iris data
+
+## Clustering with *k*-Means
+
+[Github](https://github.com/lukaszamora/K-means-Clustering) - [nbviewer](https://nbviewer.jupyter.org/github/lukaszamora/K-means-Clustering/blob/master/k-means-notebook.ipynb)
+
+Implementing the *k*-Means clustering algorithm and comparing it to sci-kit's algorithm on wheat seed data.
+
+## Credit Card Fraud Detection
+
+[Github](https://github.com/lukaszamora/Credit-Card-Fraud-Detection) - [nbviewer](https://nbviewer.jupyter.org/github/lukaszamora/Credit-Card-Fraud-Detection/blob/main/credit-card-fraud-detection.ipynb)
+
+Using various predictive models to accurately detect fraudulent credit card payments.
+
 # *natural language processing*
 
 ## It's About Nothing!
@@ -44,17 +64,3 @@ A guided numeric and text exploration on e-commerce data using NLP
 [Github](https://github.com/lukaszamora/Rush-Lyric-Generation) - [nbviewer](https://nbviewer.jupyter.org/github/lukaszamora/Rush-Lyric-Generation/blob/master/rush-nlp-markov.ipynb)
 
 Generating Rush lyrics using NLP and Markov Chains, starting with simple first-order chains and with each step improve the model to generate better text.
-
-# *ml algorithms*
-
-## Logistic Regression from Scratch
-
-[Github](https://github.com/lukaszamora/Logistic-Regression-From-Scratch) - [nbviewer](https://nbviewer.jupyter.org/github/lukaszamora/Logistic-Regression-From-Scratch/blob/master/logistic-regression.ipynb)
-
-Implementing logistic regression from scratch on Iris data
-
-## Clustering with *k*-Means
-
-[Github](https://github.com/lukaszamora/K-means-Clustering) - [nbviewer](https://nbviewer.jupyter.org/github/lukaszamora/K-means-Clustering/blob/master/k-means-notebook.ipynb)
-
-Implementing the *k*-Means clustering algorithm and comparing it to sci-kit's algorithm on wheat seed data.

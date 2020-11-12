@@ -13,11 +13,17 @@ This portfolio is a compilation of notebooks/scripts which I created for data an
 
 Visualization of Wikipedia page traffic and time series analysis of specific pages
 
-## CO_2 Levels After GRETA
+## E-Commerce Analysis with NLP
+
+[Github](https://github.com/lukaszamora/E-Commerce-Data-Analysis) - [nbviewer](https://nbviewer.jupyter.org/github/lukaszamora/E-Commerce-Data-Analysis/blob/master/ecommerce-nlp.ipynb)
+
+A guided numeric and text exploration on e-commerce data using NLP
+
+## CO<sub>2</sub> Levels After GRETA
 
 [Github](https://github.com/lukaszamora/CO2-Levels-After-GRETA) - [nbviewer](https://nbviewer.jupyter.org/github/lukaszamora/CO2-Levels-After-GRETA/blob/main/Co2-analysis.ipynb)
 
-Plotting the CO_2 levels in the critical years after the students-led March 2019 Global Response to Extreme Temperature Anomalies (GRETA) to look at progress toward Mission 2020 and the 1.5 C Paris Agreement goal.
+Plotting the CO<sub>2</sub> levels in the critical years after the students-led March 2019 Global Response to Extreme Temperature Anomalies (GRETA) to look at progress toward Mission 2020 and the 1.5 C Paris Agreement goal.
 
 ## Tracing Oil Spills
 
@@ -58,12 +64,6 @@ Using various predictive models to accurately detect fraudulent credit card paym
 [Github](https://github.com/lukaszamora/Its-About-Nothing) - [readme](https://github.com/lukaszamora/Its-About-Nothing/blob/master/README.md)
 
 Semantic text analysis on Seinfeld transcripts. Exploring character interaction through graphs for each season, creating worclouds of frequent words for each character.
-
-## E-Commerce Analysis with NLP
-
-[Github](https://github.com/lukaszamora/E-Commerce-Data-Analysis) - [nbviewer](https://nbviewer.jupyter.org/github/lukaszamora/E-Commerce-Data-Analysis/blob/master/ecommerce-nlp.ipynb)
-
-A guided numeric and text exploration on e-commerce data using NLP
 
 ## Rush Lyric Generation
 

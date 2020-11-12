@@ -13,6 +13,12 @@ This portfolio is a compilation of notebooks/scripts which I created for data an
 
 Visualization of Wikipedia page traffic and time series analysis of specific pages
 
+## CO_2 Levels After GRETA
+
+[Github](https://github.com/lukaszamora/CO2-Levels-After-GRETA) - [nbviewer](https://nbviewer.jupyter.org/github/lukaszamora/CO2-Levels-After-GRETA/blob/main/Co2-analysis.ipynb)
+
+Plotting the CO_2 levels in the critical years after the students-led March 2019 Global Response to Extreme Temperature Anomalies (GRETA) to look at progress toward Mission 2020 and the 1.5 C Paris Agreement goal.
+
 ## Tracing Oil Spills
 
 [Github](https://github.com/lukaszamora/Oil-Gas-Leakage-Analysis-and-Equipment-Failure-Detection) - [nbviewer](https://github.com/lukaszamora/Oil-Gas-Leakage-Analysis-and-Equipment-Failure-Detection/blob/master/accident-visualizations.ipynb)

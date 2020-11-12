@@ -5,7 +5,7 @@ title: projects
 
 This portfolio is a compilation of notebooks/scripts which I created for data analysis or for exploration of machine learning algorithms. A separate category is for separate projects.
 
-# *exploratory data analysis*
+# *<ins>exploratory data analysis</ins>*
 
 ## Wikipedia Traffic Analysis
 
@@ -31,7 +31,7 @@ Examining oil leakage from 2010-2017 and applying machine learning techniques to
 
 Exploratory data analysis of Austin Airbnb data from the last 10 years.
 
-# *ml algorithms*
+# *<ins>ml algorithms</ins>*
 
 ## Logistic Regression from Scratch
 
@@ -51,7 +51,7 @@ Implementing the *k*-Means clustering algorithm and comparing it to sci-kit's al
 
 Using various predictive models to accurately detect fraudulent credit card payments.
 
-# *natural language processing*
+# *<ins>natural language processing</ins>*
 
 ## It's About Nothing!
 

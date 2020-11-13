@@ -25,6 +25,12 @@ A guided numeric and text exploration on e-commerce data using NLP
 
 Plotting the CO<sub>2</sub> levels in the critical years after the students-led March 2019 Global Response to Extreme Temperature Anomalies (GRETA) to look at progress toward Mission 2020 and the 1.5 C Paris Agreement goal.
 
+## Molecular Properties EDA
+
+[Github](https://github.com/lukaszamora/Molecular-Properties-EDA) - [nbviewer](https://nbviewer.jupyter.org/github/lukaszamora/Molecular-Properties-EDA/blob/a0f4b3c36c8873706352f9007c4e54853d5ca04f/molecular-properties-eda.ipynb)
+
+Using information about atom couples in molecules and predicting certain properties between these atoms.
+
 ## Tracing Oil Spills
 
 [Github](https://github.com/lukaszamora/Oil-Gas-Leakage-Analysis-and-Equipment-Failure-Detection) - [nbviewer](https://github.com/lukaszamora/Oil-Gas-Leakage-Analysis-and-Equipment-Failure-Detection/blob/master/accident-visualizations.ipynb)

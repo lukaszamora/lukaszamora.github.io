@@ -19,6 +19,12 @@ Visualization of Wikipedia page traffic and time series analysis of specific pag
 
 A guided numeric and text exploration on e-commerce data using NLP
 
+## OpenVaccine EDA
+
+[Github](https://github.com/lukaszamora/OpenVaccineEDA) - [nbviewer](https://nbviewer.jupyter.org/github/lukaszamora/OpenVaccineEDA/blob/main/covid19-analysis-eda.ipynb)
+
+Predicting degradation rates of mRNA molecules to help with the fight of COVID-19.
+
 ## CO<sub>2</sub> Levels After GRETA
 
 [Github](https://github.com/lukaszamora/CO2-Levels-After-GRETA) - [nbviewer](https://nbviewer.jupyter.org/github/lukaszamora/CO2-Levels-After-GRETA/blob/main/Co2-analysis.ipynb)

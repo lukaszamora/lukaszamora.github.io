@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Lukas Zamora</title>
+  <style>
+    :root {
+      --bg: #ffffff;
+      --ink: #171411;
+      --muted: #6d665d;
+      --line: #d7cebf;
+      --accent: #4b6253;
+      --max: 860px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: Georgia, "Times New Roman", serif;
+      line-height: 1.55;
+      -webkit-font-smoothing: antialiased;
+      text-rendering: optimizeLegibility;
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    a:hover {
+      color: var(--accent);
+    }
+
+    .site {
+      width: min(100% - 36px, var(--max));
+      margin: 0 auto;
+    }
+
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 16px;
+      flex-wrap: wrap;
+      padding: 22px 0 12px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .wordmark {
+      font-size: 0.98rem;
+      letter-spacing: 0.02em;
+    }
+
+    .nav {
+      display: flex;
+      gap: 18px;
+      flex-wrap: wrap;
+      font-size: 0.92rem;
+      color: var(--muted);
+    }
+
+    .hero {
+      padding: 56px 0 42px;
+    }
+
+    .hero-kicker {
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--muted);
+      margin-bottom: 20px;
+    }
+
+    .hero h1 {
+      margin: 0;
+      font-size: clamp(2.6rem, 6vw, 5.6rem);
+      font-weight: 400;
+      line-height: 0.94;
+      letter-spacing: -0.04em;
+      max-width: 780px;
+    }
+
+    .hero-intro {
+      margin-top: 22px;
+      max-width: 640px;
+      color: var(--muted);
+      font-size: 1.02rem;
+    }
+
+    .hero-meta {
+      margin-top: 18px;
+      font-size: 0.92rem;
+      color: var(--muted);
+    }
+
+    section {
+      padding: 28px 0;
+    }
+
+    .section-head {
+      border-bottom: 1px solid var(--line);
+      padding-bottom: 10px;
+      margin-bottom: 24px;
+    }
+
+    .section-head h2 {
+      margin: 0;
+      font-size: 1.1rem;
+      font-weight: 400;
+    }
+
+    .projects {
+      display: flex;
+      flex-direction: column;
+      gap: 40px;
+    }
+
+    .project {
+      max-width: 720px;
+    }
+
+    .project-meta {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+
+    .project h3 {
+      margin: 0;
+      font-size: 1.65rem;
+      line-height: 1.02;
+      font-weight: 400;
+      letter-spacing: -0.02em;
+    }
+
+    .project p {
+      margin: 12px 0 8px;
+      color: var(--muted);
+      font-size: 0.98rem;
+      max-width: 640px;
+    }
+
+    .project-links {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+      font-size: 0.92rem;
+    }
+
+    .project-links a {
+      color: var(--accent);
+    }
+
+    .about-text,
+    .contact-links {
+      max-width: 640px;
+    }
+
+    .about-text p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 1rem;
+    }
+
+    .contact-links {
+      display: flex;
+      gap: 18px;
+      flex-wrap: wrap;
+      font-size: 0.95rem;
+    }
+
+    .footer {
+      padding: 34px 0 52px;
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    @media (max-width: 640px) {
+      .hero {
+        padding: 42px 0 30px;
+      }
+
+      .project h3 {
+        font-size: 1.4rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="site">
+    <header class="topbar">
+      <a class="wordmark" href="#top">Lukas Zamora</a>
+      <nav class="nav">
+        <a href="#projects">Projects</a>
+        <a href="#about">About</a>
+        <a href="#contact">Contact</a>
+        <a href="https://github.com/lukaszamora" target="_blank" rel="noreferrer">GitHub</a>
+      </nav>
+    </header>
+
+    <main id="top">
+      <section class="hero">
+        <div class="hero-kicker">Selected work</div>
+        <h1>Projects exploring data, systems, and mathematical structure.</h1>
+        <p class="hero-intro">
+          I build projects across analytics, modeling, and data systems. Recent work includes traffic flow, SQL warehouse design, forecasting, and topological analysis of music.
+        </p>
+        <div class="hero-meta">
+          Python · SQL · forecasting · dimensional modeling · nonlinear modeling · topology
+        </div>
+      </section>
+
+      <section id="projects">
+        <div class="section-head">
+          <h2>Projects</h2>
+        </div>
+
+        <div class="projects">
+          <article class="project">
+            <div class="project-meta">Applied Mathematics · Python</div>
+            <h3>Modeling Urban Traffic Flow</h3>
+            <p>
+              Modeled urban traffic dynamics using NYC taxi data, applying nonlinear speed-density relationships to identify a critical congestion threshold and analyze system efficiency.
+            </p>
+            <div class="project-links">
+              <a href="https://github.com/lukaszamora/Traffic-Flow-Modeling" target="_blank" rel="noreferrer">GitHub</a>
+            </div>
+          </article>
+
+          <article class="project">
+            <div class="project-meta">SQL / Warehouse Design · DuckDB</div>
+            <h3>SQL E-commerce Analytics Warehouse</h3>
+            <p>
+              Built a SQL-based analytics warehouse from raw e-commerce data, designing fact and dimension tables to analyze revenue, customer behavior, and fulfillment performance.
+            </p>
+            <div class="project-links">
+              <a href="https://github.com/lukaszamora/Building-a-SQL-Analytics-Warehouse-for-E-commerce-Data" target="_blank" rel="noreferrer">GitHub</a>
+            </div>
+          </article>
+
+          <article class="project">
+            <div class="project-meta">Forecasting / Analysis · Python</div>
+            <h3>NYC Taxi Demand Analysis & Forecasting</h3>
+            <p>
+              Analyzed NYC taxi trip data to uncover demand patterns and congestion trends, then built time series models to forecast short-term ride volume.
+            </p>
+            <div class="project-links">
+              <a href="https://github.com/lukaszamora/NYC-Taxi-Demand-Analysis-Forecasting" target="_blank" rel="noreferrer">GitHub</a>
+            </div>
+          </article>
+
+          <article class="project">
+            <div class="project-meta">Topology / Music Data · Python</div>
+            <h3>The Topology of Ethiopian Jazz</h3>
+            <p>
+              Applied topological data analysis to music data, using persistent homology to explore the geometric structure of Ethiopian Jazz and map abstract features to individual tracks.
+            </p>
+            <div class="project-links">
+              <a href="https://github.com/lukaszamora/The-Topology-of-Ethiopian-Jazz" target="_blank" rel="noreferrer">GitHub</a>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <section id="about">
+        <div class="section-head">
+          <h2>About</h2>
+        </div>
+        <div class="about-text">
+          <p>
+            I’m interested in projects that make structure visible, whether that means finding signal in messy operational data or using more abstract tools to understand shape, flow, and variation. My background is in data analysis and operations, and I’m especially drawn to work that combines clarity with deeper modeling.
+          </p>
+        </div>
+      </section>
+
+      <section id="contact">
+        <div class="section-head">
+          <h2>Contact</h2>
+        </div>
+        <div class="contact-links">
+          <a href="https://github.com/lukaszamora" target="_blank" rel="noreferrer">GitHub</a>
+          <a href="mailto:lukaspzamora@gmail.com">Email</a>
+          <a href="https://www.linkedin.com/in/lukas-zamora-80931a380/" target="_blank" rel="noreferrer">LinkedIn</a>
+        </div>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <p>© Lukas Zamora 2026</p>
+    </footer>
+  </div>
+</body>
+</html>

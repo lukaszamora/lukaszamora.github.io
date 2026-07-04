@@ -4,235 +4,434 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Lukas Zamora</title>
-<link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+<meta name="description" content="Lukas Zamora. Selected work.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@1,400..800&display=swap" rel="stylesheet">
 <style>
-  * { margin: 0; padding: 0; box-sizing: border-box; }
 
-  body {
-    font-family: 'Helvetica Neue', Helvetica, 'Inter', Arial, sans-serif;
-    background: #fff;
-    color: #000;
+  :root{
+    --bg:      #F9F9F9;
+    --ink:     #262420;
+    --muted:   #8C867A;
+    --line:    #262420;
+    --panel-bg:#F9F9F9;
+    --font-display: 'EB Garamond', serif;
+    --font-mono: 'IBM Plex Mono', monospace;
+
+    --pad: clamp(10px, 3.8vw, 40px);
   }
 
-  .page {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 3rem 5rem;
+  *{ box-sizing:border-box; margin:0; padding:0; }
+
+  html{ scroll-behavior:smooth; }
+  @media (prefers-reduced-motion: reduce){
+    html{ scroll-behavior:auto; }
+    *{ transition-duration:0.001ms !important; }
   }
 
-  h1 {
-    font-family: 'EB Garamond', serif;
-    font-size: clamp(9rem, 10vw, 9rem);
-    line-height: 0.88;
-    letter-spacing: -0.03em;
-    margin-bottom: 0.75rem;
+  body{
+    background:var(--bg);
+    color:var(--ink);
+    font-family:var(--font-mono);
+    overflow-x:hidden;
   }
 
-  h1 em { font-style: italic; }
+  a{ color:inherit; text-decoration:none; }
+  button{ font:inherit; color:inherit; background:none; border:none; cursor:pointer; }
 
-  .sub {
-    font-size: 0.9rem;
-    color: #555;
-    margin-bottom: 0.2rem;
+  /* ============ HOME ============ */
+  main.home{
+    padding:clamp(24px,3vh,56px) var(--pad) 200px;
+    min-height:100vh;
   }
 
-  hr { border: none; border-top: 1px solid #000; margin: 2rem 0; }
-  hr.thick { border-top: 3px solid #000; }
+  .line{
+    display:block;
+    font-family:var(--font-display);
+    font-style:italic;
+    font-weight:400;
+    font-size:clamp(4.4rem, 6.6vw, 4.15rem);
+    line-height:0.95;
+    letter-spacing:-0.005em;
+    cursor:pointer;
+    width:fit-content;
+    max-width:100%;
+    position:relative;
+  }
+  .line.name{
+    margin-bottom:0.15em;
+  }
+  .line::after{
+    content:"";
+    position:absolute;
+    left:0; bottom:0.08em;
+    width:0%;
+    height:1px;
+    background:var(--ink);
+    transition:width 0.3s ease;
+  }
+  .line:hover::after,
+  .line:focus-visible::after{ width:100%; }
+  .line:focus-visible{ outline:none; }
 
-  h2 {
-    font-size: 0.72rem;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-    margin-bottom: 1.5rem;
+  /* ============ FIXED FOOTER ============ */
+  .footer-fixed{
+    position:fixed;
+    left:var(--pad);
+    bottom:22px;
+    z-index:20;
+    display:flex;
+    align-items:center;
+    gap:22px;
+    flex-wrap:wrap;
+    max-width:calc(100% - (var(--pad) * 2));
+  }
+  .pill-group{
+    display:flex;
+    gap:8px;
+  }
+  .pill{
+    border:1px solid var(--ink);
+    padding:6px 14px;
+    font-family:var(--font-mono);
+    font-size:0.72rem;
+    letter-spacing:0.02em;
+    background:var(--bg);
+  }
+  .pill:hover{ background:var(--ink); color:var(--bg); }
+
+  .footer-meta{
+    font-family:var(--font-mono);
+    font-size:0.68rem;
+    line-height:1.5;
+    color:var(--muted);
   }
 
-  .project {
-    margin-bottom: 2.5rem;
+  /* ============ SLIDE PANEL ============ */
+  .panel{
+    position:fixed;
+    top:0; right:0;
+    width:50%;
+    height:100vh;
+    background:var(--panel-bg);
+    border-left:1px solid var(--line);
+    transform:translateX(100%);
+    transition:transform 0.5s cubic-bezier(.22,.7,.2,1);
+    z-index:100;
+    overflow-y:auto;
+  }
+  .panel.open{ transform:translateX(0); }
+  @media (max-width:800px){
+    .panel{ width:100%; border-left:none; }
   }
 
-  .project-inner {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 3rem;
-    align-items: start;
+  .panel-bar{
+    position:sticky;
+    top:0;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:16px var(--pad);
+    background:var(--panel-bg);
+    border-bottom:1px solid var(--line);
+    font-family:var(--font-mono);
+    font-size:0.72rem;
+    letter-spacing:0.02em;
+    z-index:2;
+  }
+  .panel-bar .close-btn{ font-family:var(--font-mono); font-size:0.75rem; }
+  .panel-bar .close-btn:hover{ color:var(--muted); }
+
+  .panel-body{ padding: 8px var(--pad) 80px; }
+
+  /* --- shared row/divider pattern --- */
+  .prow{
+    display:grid;
+    grid-template-columns: 1fr 1.6fr;
+    gap:32px;
+    padding:26px 0;
+    border-bottom:1px solid var(--line);
+    font-size:0.76rem;
+    line-height:1.7;
+  }
+  .prow:last-child{ border-bottom:none; }
+  @media (max-width:560px){
+    .prow{ grid-template-columns:1fr; gap:10px; }
+  }
+  .prow .label{ color:var(--ink); white-space:nowrap; }
+  .prow .content{ color:var(--ink); }
+  .prow .entry{ margin-bottom:18px; }
+  .prow .entry:last-child{ margin-bottom:0; }
+  .prow .muted{ color:var(--muted); }
+  .prow em{ font-style:italic; }
+
+  /* --- project panel specific --- */
+  .proj-title{
+    text-align:center;
+    padding:36px var(--pad) 8px;
+    font-family:var(--font-display);
+  }
+  .proj-title h2{
+    font-size:clamp(1.5rem,3vw,2.1rem);
+    font-weight:400;
+    font-style:normal;
+    letter-spacing:-0.01em;
+  }
+  .proj-title .tagline{
+    font-style:italic;
+    font-size:1.05rem;
+    margin-top:4px;
+    color:var(--ink);
+  }
+  .proj-title .role{
+    font-family:var(--font-mono);
+    font-style:normal;
+    font-size:0.72rem;
+    color:var(--muted);
+    margin-top:10px;
+    letter-spacing:0.02em;
   }
 
-  .project-inner.no-image {
-    display: block;
+  .img-placeholder{
+    margin:28px var(--pad) 4px;
+    aspect-ratio:16/10;
+    position:relative;
+    /* background-color:#EEE7D9;
+    background-image:
+      repeating-linear-gradient(to right, var(--line) 0 1px, transparent 1px calc(100%/6)),
+      repeating-linear-gradient(to bottom, var(--line) 0 1px, transparent 1px calc(100%/5)); */
+  }
+  .img-placeholder .cap{
+    position:absolute;
+    bottom:10px; left:10px;
+    font-family:var(--font-mono);
+    font-size:0.58rem;
+    line-height:1.4;
+    color:var(--muted);
+    text-transform:uppercase;
+    letter-spacing:0.03em;
+  }
+ 
+  .img-block{
+    margin:28px var(--pad) 4px;
+  }
+  .img-block img{
+    display:block;
+    width:100%;
+    height:auto;
   }
 
-  .project-title {
-    font-family: 'Helvetica Neue', Helvetica, 'Inter', Arial, sans-serif;
-    font-size: 1.75rem;
-    margin-bottom: 0.2rem;
-    line-height: 1.1;
-  }
-
-  .project-title a {
-    color: #000;
-    text-decoration: none;
-  }
-
-  .project-title a:hover { text-decoration: underline; }
-
-  .project-meta {
-    font-size: 0.72rem;
-    color: #888;
-    margin-bottom: 0.6rem;
-    letter-spacing: 0.04em;
-  }
-
-  .project-text p {
-    font-size: 0.9rem;
-    line-height: 1.7;
-    color: #333;
-  }
-
-  .project-images {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 6px;
-  }
-
-  .project-images.single {
-    grid-template-columns: 1fr;
-  }
-
-  .project-images img {
-    width: 100%;
-    display: block;
-    border: 0.5px solid #ddd;
-  }
-
-  .jcard-strip {
-    display: grid;
-    grid-template-columns: repeat(5, 1fr);
-    gap: 5px;
-    margin-top: 0.75rem;
-  }
-
-  .jcard-img img {
-    width: 100%;
-    display: block;
-    aspect-ratio: 1;
-    object-fit: cover;
-    border: 0.5px solid #ddd;
-  }
-
-  .bottom {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 5rem;
-  }
-
-  .contact-row {
-    font-size: 0.9rem;
-    margin-bottom: 0.4rem;
-  }
-
-  .contact-row a { color: #000; }
-  .contact-row a:hover { color: #555; }
-
-  p.about {
-    font-size: 0.9rem;
-    line-height: 1.75;
-    color: #333;
-  }
-
-  @media (max-width: 800px) {
-    .page { padding: 2rem 1.5rem; }
-    .project-inner { grid-template-columns: 1fr; gap: 1rem; }
-    .bottom { grid-template-columns: 1fr; gap: 2rem; }
-    .project-images { grid-template-columns: 1fr 1fr; }
-    .jcard-strip { grid-template-columns: repeat(3, 1fr); }
+  @media (max-width:560px){
+    .proj-title{ padding-inline:20px; }
+    .img-placeholder{ margin-inline:20px; }
   }
 </style>
 </head>
 <body>
-<div class="page">
 
-<h1>Lukas <em>Zamora</em></h1>
-<p class="sub">Web Developer based in Austin, TX</p>
-<hr class="thick">
+<div class="top-accent"></div>
 
-<h2>Work</h2>
+<!-- ============ HOME ============ -->
+<main class="home">
+  <span class="line name" tabindex="0" role="button" data-type="about">Lukas Zamora</span>
+  <span class="line" tabindex="0" role="button" data-type="project" data-id="goldrush">Gold Rush Vinyl</span>
+  <span class="line" tabindex="0" role="button" data-type="project" data-id="mockup">Vinyl Mockup Tool</span>
+  <span class="line" tabindex="0" role="button" data-type="project" data-id="artportfolio">Sarah LaRose — Artist Portfolio</span>
+  <span class="line" tabindex="0" role="button" data-type="project" data-id="treethatmoves">Tree That Moves</span>
+  <span class="line" tabindex="0" role="button" data-type="project" data-id="tapes">Tapes from the Middle East</span>
+</main>
 
-<div class="project">
-  <div class="project-inner">
-    <div class="project-text">
-      <div class="project-title"><a href="https://www.goldrushvinyl.com/" target="_blank">Gold Rush Vinyl ↗</a></div>
-      <div class="project-meta">Webflow · CMS · SEO · GTM · Ongoing</div>
-      <p>Full website for Austin's premier vinyl pressing plant. Built and maintained in Webflow — CMS, SEO, third-party integrations, ongoing feature work.</p>
-    </div>
-    <div></div>
+<div class="footer-fixed">
+  <div class="pill-group">
+    <button class="pill" data-type="about">About</button>
+    <a class="pill" href="https://www.linkedin.com/in/lukas-zamora/" target="_blank" rel="noopener">LinkedIn</a>
   </div>
 </div>
 
-<div class="project">
-  <div class="project-inner">
-    <div class="project-text">
-      <div class="project-title"><a href="https://www.goldrushvinyl.com/vinyl-mockup" target="_blank">Vinyl Mockup Tool ↗</a></div>
-      <div class="project-meta">Vanilla HTML / CSS / JS · Canvas API</div>
-      <p>Custom web app built from scratch. Lets customers preview vinyl colors and jacket art in real time before placing an order. No frameworks, no dependencies.</p>
-    </div>
-    <div class="project-images single">
-     <a href="images/mockup-tool.png" target="_blank" rel="noopener"><img src="images/mockup-tool.png" alt="Vinyl mockup tool"></a>
-    </div>
+<!-- ============ SLIDE PANEL ============ -->
+<aside class="panel" id="panel" aria-hidden="true">
+  <div class="panel-bar">
+    <span id="panel-eyebrow">About</span>
+    <button class="close-btn" id="panel-close" aria-label="Close panel">[-X-]</button>
   </div>
-</div>
+  <div class="panel-body" id="panel-body"></div>
+</aside>
 
-<div class="project">
-  <div class="project-inner">
-    <div class="project-text">
-      <div class="project-title">Sarah LaRose — Artist Portfolio</div>
-      <div class="project-meta">Webflow · CMS Collections · In Progress</div>
-      <p>Portfolio site for an Austin-based oil painter. Minimal, image-forward, built in Webflow with custom CMS collections.</p>
-    </div>
-    <div class="project-images">
-      <a href="images/sarah-gallery.png" target="_blank" rel="noopener"><img src="images/sarah-gallery.png" alt="Artist portfolio"></a>
-      <a href="images/sarah-info.png" target="_blank" rel="noopener"><img src="images/sarah-info.png" alt="Artist info"></a>
-    </div>
-  </div>
-</div>
+<script>
+  const projects = {
+    goldrush: {
+      title:"Gold Rush Vinyl",
+      tagline:"Maintaining Austin's premier record pressing plant's site.",
+      image:"images/goldrush-home.png", 
+      role:"Webflow · CMS · SEO · GTM",
+      client:"",
+      year:"2025-2026",
+      body:[
+        "The website behind Austin's only record pressing plant, and one I run end to end — design, development, SEO, and Google Tag Manager, plus every new feature that gets added along the way. There's no separation between the marketing site and the product here; changes to search rankings, page speed, and new tools all come out of the same ongoing work.",
+        "Recent additions include restructured product pages for better search visibility and the vinyl mockup tool below, built to give customers a way to preview their release before it goes to press."
+      ]
+    },
+    mockup: {
+      title:"Vinyl Mockup Tool",
+      tagline:"Preview vinyl colors and jacket art in real time before placing an order.",
+      image:"images/mockup-tool.png", 
+      role:"Vanilla HTML · CSS · JS · Canvas API",
+      client:"",
+      year:"2026",
+      body:[
+        "Built for Gold Rush Vinyl customers preparing a new release, this tool lets someone upload their jacket and label artwork, choose a vinyl color, and see a realistic mockup of the finished record before it's pressed.",
+        "It replaced a back-and-forth of emailed proofs with something a customer can do themselves in a few minutes, same jacket art, same label art, instant preview."
+      ]
+    },
+    artportfolio: {
+      title:"Sarah LaRose — Artist Portfolio",
+      tagline:"Portfolio site for an Austin-based oil painter",
+      role:"Webflow · CMS Collections",
+      image:"images/sarah-gallery.png",
+      client:"",
+      year:"2026",
+      body:[
+        "Sarah paints from her home studio in Austin, and needed a site that got out of the way of the work. The layout is built around large, unobstructed views of each painting, with just enough structure, series, medium, dimensions, to help her audience navigate.",
+        "No storefront, no distractions. The goal was a site that reads like a small gallery, not a product catalog."
+      ]
+    },
+    treethatmoves: {
+      title:"Tree That Moves",
+      tagline:"Static site for an independent music label",
+      role:"Vanilla HTML · CSS · JS",
+      image:"images/treethatmoves.png",
+      client:"",
+      year:"2025-2026",
+      body:[
+        "Tree That Moves needed a simple, fast presence online. A place to point people toward releases without the overhead of a full CMS. The site is entirely static: no database, no admin panel, just a clean landing page that loads instantly."
+      ]
+    },
+    tapes: {
+      title:"Tapes from the Middle East",
+      tagline:"Static site for an independent music label",
+      role:"Vanilla HTML · CSS · JS",
+      image:"images/casettes.png",
+      client:"",
+      year:"2025-2026",
+      body:[
+        "A hobby project of cassette mixtapes I put together and package with original J-card artwork, designed in Photoshop and Illustrator. Each tape gets its own look, from typography to color story, built around whatever the mix is doing musically.",
+        "The series is a work in progress, with new tapes and new J-cards added as they're finished."
+      ]
+    }
+  };
 
-<div class="project">
-  <div class="project-inner no-image">
-    <div class="project-title"><a href="https://thetreethatmoves.com/" target="_blank">The Tree That Moves ↗</a></div>
-    <div class="project-meta">Static HTML / CSS</div>
-    <p style="font-size:0.9rem;line-height:1.7;color:#333;">Hand-coded static site for an independent music label. Fast, minimal, zero bloat.</p>
-  </div>
-</div>
+  const panel = document.getElementById('panel');
+  const panelBody = document.getElementById('panel-body');
+  const panelEyebrow = document.getElementById('panel-eyebrow');
 
-<div class="project">
-  <div class="project-inner">
-    <div class="project-text">
-      <div class="project-title">Tapes from the Middle East: J-Cards</div>
-      <div class="project-meta">Photoshop · Illustrator</div>
-      <p>Cassette j-cards for a personal mix series. Bold color blocking, mixed-script typography across Arabic, Farsi, and Latin. One volume per country.</p>
-    </div>
-    <div class="jcard-strip">
-      <div class="jcard-img"><a href="images/jcard-turkiye.png" target="_blank" rel="noopener"><img src="images/jcard-turkiye.png" alt="Türkiye Vol. I"></a></div>
-      <div class="jcard-img"><a href="images/jcard-egypt.png" target="_blank" rel="noopener"><img src="images/jcard-egypt.png" alt="Egypt Vol. IV"></a></div>
-      <div class="jcard-img"><a href="images/jcard-iran.png" target="_blank" rel="noopener"><img src="images/jcard-iran.png" alt="Iran Vol. II"></a></div>
-      <div class="jcard-img"><a href="images/jcard-lebanon.png" target="_blank" rel="noopener"><img src="images/jcard-lebanon.png" alt="Lebanon Vol. III"></a></div>
-      <div class="jcard-img"><a href="images/jcard-syria.png" target="_blank" rel="noopener"><img src="images/jcard-syria.png" alt="Syria Vol. V"></a></div>
-  </div>
-</div>
+  function aboutHTML(){
+    return `
+      <div class="prow">
+        <div class="label">
+          © 2026<br>
+          Lukas Zamora<br>
+          Austin, TX<br>
+          Email: lukaspzamora@gmail.com<br>
+        </div>
+        <div class="content">
+          I'm Lukas, based in Austin. At Gold Rush Vinyl I wear a lot of hats. Pressing records, sure, but also building and maintaining the website end to end: design, development, SEO, and every feature in between. Web design started as something I taught myself on the side, and it's turned into the work I want to be doing full-time.
+          <br><br>
+          Outside of that, most of my time goes to things that end up feeding back into the work: playing guitar, painting, making mixtapes with their own hand-designed J-cards, riding my bike, and collecting records. Gold Rush Vinyl sits right at the middle of a lot of that.
+        </div>
+      </div>
 
-<hr>
+      <div class="prow">
+        <div class="label">Employment</div>
+        <div class="content">
+          <div class="entry">
+            Lead Press Operator, Web Designer<br>
+            <em>Gold Rush Vinyl</em><br>
+            <span class="muted">Austin, TX</span><br>
+            June 2022 – Present
+          </div>
+          <div class="entry">
+            Product Data Specialist<br>
+            <em>Four Hands</em><br>
+            <span class="muted">Austin, TX</span><br>
+            Nov 2021 - May 2022
+          </div>
+          <div class="entry">
+            Data Processing Technician<br>
+            <em>Loram Technologies</em><br>
+            <span class="muted">Georgetown, TX</span><br>
+            May 2021 – Nov 2021
+          </div>
+        </div>
+      </div>
 
-<div class="bottom">
-  <div>
-    <h2>About</h2>
-    <p class="about">I build production websites and web apps. Background in data and operations. Currently maintaining Gold Rush Vinyl's web presence. Open to web developer/designer roles.</p>
-  </div>
-  <div>
-    <h2>Contact</h2>
-    <div class="contact-row"><a href="mailto:lukaspzamora@gmail.com">lukaspzamora@gmail.com</a></div>
-    <div class="contact-row"><a href="https://www.linkedin.com/in/lukas-zamora-80931a380/" target="_blank">LinkedIn</a></div>
-  </div>
-</div>
+      <div class="prow">
+        <div class="label">Education</div>
+        <div class="content">
+          <div class="entry">
+            BS, Applied Mathematics<br>
+            <span class="muted">Texas A&M University</span><br>
+            2020
+          </div>
+        </div>
+      </div>
+    `;
+  }
 
-</div>
+  function projectHTML(p){
+    return `
+      <div class="proj-title">
+        <h2>${p.title}</h2>
+        <div class="role">${p.role}</div>
+      </div>
+      <div class="img-block">
+        <img src="${p.image}" alt="${p.title} project visual">
+      </div>
+      <div class="prow">
+        <div class="label">
+          ${p.title}
+        </div>
+        <div class="content">
+          ${p.body.map(par => `<p style="margin-bottom:14px;">${par}</p>`).join('')}
+        </div>
+      </div>
+    `;
+  }
+
+  function openPanel(type, id){
+    if (type === 'about'){
+      panelEyebrow.textContent = 'About';
+      panelBody.innerHTML = aboutHTML();
+    } else {
+      const p = projects[id];
+      panelEyebrow.textContent = `${p.title}, ${p.year}`;
+      panelBody.innerHTML = projectHTML(p);
+    }
+    panel.classList.add('open');
+    panel.setAttribute('aria-hidden','false');
+    panelBody.parentElement.scrollTop = 0;
+  }
+
+  function closePanel(){
+    panel.classList.remove('open');
+    panel.setAttribute('aria-hidden','true');
+  }
+
+  document.querySelectorAll('[data-type]').forEach(el => {
+    el.addEventListener('click', () => openPanel(el.dataset.type, el.dataset.id));
+    el.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' '){
+        e.preventDefault();
+        openPanel(el.dataset.type, el.dataset.id);
+      }
+    });
+  });
+
+  document.getElementById('panel-close').addEventListener('click', closePanel);
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') closePanel();
+  });
+</script>
+
 </body>
 </html>
